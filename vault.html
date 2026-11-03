@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hermes Vault</title>
+    <style>
+        :root {
+            --bg: #121212; --card-bg: #1e1e1e; --text: #e0e0e0;
+            --accent: #bb86fc; --green: #03dac6; --input-bg: #333;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 16px; display: flex; flex-direction: column; align-items: center; }
+        header { width: 100%; max-width: 500px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        h1 { margin: 0; font-size: 1.2rem; font-weight: 600; }
+        .search-box { width: 100%; max-width: 500px; margin-bottom: 20px; }
+        input[type="text"] { width: 100%; box-sizing: border-box; background: var(--input-bg); color: var(--text); border: 1px solid #444; padding: 12px; border-radius: 8px; font-size: 1rem; outline: none; }
+        input[type="text"]:focus { border-color: var(--accent); }
+        .notes-list { width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 12px; }
+        .note-card { background: var(--card-bg); border-radius: 12px; padding: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); display: flex; flex-direction: column; gap: 8px; }
+        .note-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+        .note-title { font-weight: bold; font-size: 1.1rem; color: var(--accent); word-break: break-word; }
+        .note-folder { font-size: 0.75rem; background: #333; padding: 4px 8px; border-radius: 12px; white-space: nowrap; }
+        .note-snippet { font-size: 0.9rem; color: #aaa; line-height: 1.4; }
+        .btn-open { display: block; text-align: center; background: var(--green); color: #000; text-decoration: none; padding: 10px; border-radius: 8px; font-weight: bold; margin-top: 4px; }
+        .loading { text-align: center; color: #888; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>📚 Hermes Vault</h1>
+        <div id="count" style="font-size:0.8rem; color:#888;">Cargando...</div>
+    </header>
+
+    <div class="search-box">
+        <input type="text" id="search" placeholder="🔍 Buscar en el vault..." oninput="filterNotes()">
+    </div>
+
+    <div class="notes-list" id="notes-list">
+        <div class="loading">Cargando notas...</div>
+    </div>
+
+    <script>
+        let allNotes = [];
+        const vaultName = "CDGePeCa"; // Nombre de la carpeta en Obsidian
+
+        async function loadNotes() {
+            try {
+                const response = await fetch('vault.json?t=' + new Date().getTime());
+                if (!response.ok) throw new Error('Error al cargar');
+                allNotes = await response.json();
+                document.getElementById('count').innerText = allNotes.length + " notas";
+                renderNotes(allNotes);
+            } catch (e) {
+                document.getElementById('notes-list').innerHTML = '<div class="loading" style="color:red">Error al cargar las notas</div>';
+            }
+        }
+
+        function renderNotes(notes) {
+            const list = document.getElementById('notes-list');
+            if (notes.length === 0) {
+                list.innerHTML = '<div class="loading">No se encontraron notas</div>';
+                return;
+            }
+            
+            // Mostrar solo las primeras 50 para no saturar el DOM
+            const toRender = notes.slice(0, 50);
+            
+            list.innerHTML = toRender.map(note => {
+                // Codificar la ruta para el enlace de Obsidian
+                const obsidianUrl = `obsidian://open?vault=${vaultName}&file=${encodeURIComponent(note.path)}`;
+                
+                return `
+                <div class="note-card">
+                    <div class="note-header">
+                        <div class="note-title">${note.title}</div>
+                        <div class="note-folder">${note.folder}</div>
+                    </div>
+                    <div class="note-snippet">${note.snippet}</div>
+                    <a href="${obsidianUrl}" class="btn-open">📝 Abrir en Obsidian</a>
+                </div>
+                `;
+            }).join('');
+            
+            if (notes.length > 50) {
+                list.innerHTML += `<div class="loading">Mostrando 50 de ${notes.length} notas. Usa el buscador.</div>`;
+            }
+        }
+
+        function filterNotes() {
+            const query = document.getElementById('search').value.toLowerCase();
+            const filtered = allNotes.filter(n => 
+                n.title.toLowerCase().includes(query) || 
+                n.snippet.toLowerCase().includes(query) ||
+                n.folder.toLowerCase().includes(query)
+            );
+            renderNotes(filtered);
+        }
+
+        loadNotes();
+    </script>
+</body>
+</html>
