@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hermes Dashboard</title>
+    <style>
+        :root {
+            --bg: #121212;
+            --card-bg: #1e1e1e;
+            --text: #e0e0e0;
+            --accent: #bb86fc;
+            --green: #03dac6;
+            --red: #cf6679;
+            --yellow: #ffb74d;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        header {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+        h1 { margin: 0; font-size: 1.2rem; font-weight: 600; }
+        .update-time { font-size: 0.8rem; color: #888; }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 100%;
+            max-width: 400px;
+        }
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .card.full-width { grid-column: span 2; }
+        .card-header {
+            font-size: 0.85rem;
+            color: #aaa;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .card-value {
+            font-size: 1.4rem;
+            font-weight: bold;
+        }
+        .sub-value { font-size: 0.85rem; color: #888; margin-top: 4px; }
+        .status-ok { color: var(--green); }
+        .status-warn { color: var(--yellow); }
+        .status-bad { color: var(--red); }
+        .progress-bar {
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        .footer { margin-top: 20px; font-size: 0.75rem; color: #555; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🖥️ Hermes</h1>
+        <div class="update-time" id="update-time">Cargando...</div>
+    </header>
+
+    <div class="grid">
+        <!-- RAM -->
+        <div class="card full-width">
+            <div class="card-header">🔋 RAM del Sistema</div>
+            <div class="card-value" id="ram-text">-- / -- MB</div>
+            <div class="progress-bar"><div class="progress-fill" id="ram-bar"></div></div>
+        </div>
+
+        <!-- VPN -->
+        <div class="card">
+            <div class="card-header">🌐 VPN</div>
+            <div class="card-value" id="vpn-country">--</div>
+            <div class="sub-value" id="vpn-ip">--</div>
+        </div>
+
+        <!-- Gateway -->
+        <div class="card">
+            <div class="card-header">⚙️ Gateway</div>
+            <div class="card-value status-ok" id="gw-status">--</div>
+            <div class="sub-value" id="gw-uptime">--</div>
+        </div>
+
+        <!-- Crons -->
+        <div class="card">
+            <div class="card-header">⏰ Crons</div>
+            <div class="card-value" id="crons-count">--</div>
+            <div class="sub-value">activos</div>
+        </div>
+
+        <!-- INBOX -->
+        <div class="card">
+            <div class="card-header">📥 INBOX</div>
+            <div class="card-value status-ok" id="inbox-count">--</div>
+            <div class="sub-value">notas pendientes</div>
+        </div>
+    </div>
+
+    <div class="footer">Actualizado automáticamente cada 60s</div>
+
+    <script>
+        async function fetchData() {
+            try {
+                // cache: 'no-store' evita que el navegador guarde el JSON viejo
+                const response = await fetch('data.json?t=' + new Date().getTime(), { cache: 'no-store' });
+                if (!response.ok) throw new Error('Error al cargar data.json');
+                const data = await response.json();
+
+                // 1. Actualizar hora
+                const date = new Date(data.timestamp * 1000);
+                const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                document.getElementById('update-time').innerText = 'Actualizado: ' + timeString;
+
+                // 2. RAM
+                document.getElementById('ram-text').innerText = `${data.ram.free} MB libres / ${data.ram.total} MB`;
+                const ramPercent = (data.ram.free / data.ram.total) * 100;
+                const ramBar = document.getElementById('ram-bar');
+                ramBar.style.width = `${ramPercent}%`;
+                ramBar.style.backgroundColor = ramPercent < 15 ? 'var(--red)' : (ramPercent < 30 ? 'var(--yellow)' : 'var(--green)');
+
+                // 3. VPN
+                document.getElementById('vpn-country').innerText = data.vpn.country;
+                document.getElementById('vpn-ip').innerText = data.vpn.ip;
+                // Si la IP es 0.0.0.0 (sin conexión), pintar en rojo
+                document.getElementById('vpn-country').className = data.vpn.ip === '0.0.0.0' ? 'card-value status-bad' : 'card-value';
+
+                // 4. Gateway
+                const gwStatus = document.getElementById('gw-status');
+                const gwUptime = document.getElementById('gw-uptime');
+                if (data.gateway.pid && data.gateway.pid !== "") {
+                    gwStatus.innerText = 'Activo';
+                    gwStatus.className = 'card-value status-ok';
+                    gwUptime.innerText = 'Uptime: ' + data.gateway.uptime;
+                } else {
+                    gwStatus.innerText = 'Caído';
+                    gwStatus.className = 'card-value status-bad';
+                    gwUptime.innerText = '--';
+                }
+
+                // 5. Crons
+                document.getElementById('crons-count').innerText = data.crons.active;
+
+                // 6. INBOX
+                const inboxEl = document.getElementById('inbox-count');
+                inboxEl.innerText = data.inbox.count;
+                // Si hay más de 5 notas, ponerlo en amarillo para avisar
+                inboxEl.className = data.inbox.count > 5 ? 'card-value status-warn' : 'card-value status-ok';
+
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('update-time').innerText = '⚠️ Error de conexión';
+                document.getElementById('update-time').style.color = 'var(--red)';
+            }
+        }
+
+        // Cargar inmediatamente y luego cada 60 segundos
+        fetchData();
+        setInterval(fetchData, 60000);
+    </script>
+</body>
+</html>
