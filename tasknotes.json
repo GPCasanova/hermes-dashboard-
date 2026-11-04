@@ -221,8 +221,8 @@
       "tareas",
       "projects"
     ],
-    "is_project": false,
-    "has_subtasks": false,
+    "is_project": true,
+    "has_subtasks": true,
     "path": "TaskNotes/Tasks/Comprar teléfono de Karell.md"
   },
   {
@@ -235,8 +235,8 @@
       "task",
       "projects"
     ],
-    "is_project": false,
-    "has_subtasks": false,
+    "is_project": true,
+    "has_subtasks": true,
     "path": "TaskNotes/Tasks/Cambiar categoría docente a asistente.md"
   },
   {
@@ -404,7 +404,7 @@
       "task"
     ],
     "is_project": false,
-    "has_subtasks": false,
+    "has_subtasks": true,
     "path": "TaskNotes/Tasks/Confeccionar infografia.md"
   },
   {
