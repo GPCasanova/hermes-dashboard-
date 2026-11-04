@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Hermes Notas</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { --bg: #0f172a; --surface: #1e293b; --text: #f8fafc; --text-muted: #94a3b8; --accent: #8b5cf6; --border: #334155; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -15,13 +16,12 @@
         .search-container { width: 100%; max-width: 600px; }
         .search-container input { width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 12px; font-size: 0.95rem; outline: none; }
         .notes-list { width: 100%; max-width: 600px; padding: 16px; display: flex; flex-direction: column; gap: 12px; margin: 0 auto; }
-        .note-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 10px; transition: 0.2s; }
-        .note-card:hover { border-color: #475569; transform: translateY(-2px); }
+        .note-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
         .note-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
         .note-title { font-size: 1.05rem; font-weight: 600; color: var(--text); }
         .note-folder { font-size: 0.7rem; color: var(--accent); background: rgba(139, 92, 246, 0.1); padding: 4px 8px; border-radius: 6px; white-space: nowrap; font-weight: 600; text-transform: uppercase; }
         .note-snippet { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
-        .btn-open { display: flex; justify-content: center; align-items: center; background: var(--accent); color: white; text-decoration: none; padding: 10px; border-radius: 10px; font-size: 0.9rem; font-weight: 600; margin-top: 4px; }
+        .btn-open { display: block; width: 100%; text-align: center; background: var(--accent); color: white; border: none; padding: 12px; border-radius: 10px; font-size: 0.9rem; font-weight: 600; margin-top: 4px; cursor: pointer; font-family: inherit; }
     </style>
 </head>
 <body>
@@ -35,9 +35,13 @@
         </div>
     </header>
     <div class="notes-list" id="notes-list"></div>
+    
     <script>
         let allNotes = [];
         const vaultName = "CDGePeCa";
+        const tg = window.Telegram?.WebApp;
+        if (tg) tg.expand();
+
         async function loadNotes() {
             try {
                 const response = await fetch('vault.json?t=' + new Date().getTime());
@@ -46,23 +50,32 @@
                 renderNotes(allNotes);
             } catch (e) { document.getElementById('notes-list').innerHTML = '<div style="text-align:center;">Error al cargar.</div>'; }
         }
+
         function renderNotes(notes) {
             const list = document.getElementById('notes-list');
             if (notes.length === 0) { list.innerHTML = '<div style="text-align:center;">No hay notas.</div>'; return; }
-            list.innerHTML = notes.slice(0, 100).map(note => {
-                // Usamos el nuevo puente de redirección en lugar del esquema directo
-                const redirectUrl = `redirect.html?vault=${encodeURIComponent(vaultName)}&file=${encodeURIComponent(note.path)}`;
+            list.innerHTML = notes.slice(0, 100).map((note) => {
                 return `<div class="note-card">
                     <div class="note-header"><div class="note-title">${note.title}</div><div class="note-folder">${note.folder}</div></div>
                     <div class="note-snippet">${note.snippet}</div>
-                    <a href="${redirectUrl}" class="btn-open">📝 Abrir en Obsidian</a>
+                    <button class="btn-open" onclick="abrirEnObsidian('${encodeURIComponent(note.path)}')">📝 Abrir en Obsidian</button>
                 </div>`;
             }).join('');
         }
+
+        function abrirEnObsidian(encodedPath) {
+            const path = decodeURIComponent(encodedPath);
+            const obsidianUrl = `obsidian://open?vault=${vaultName}&file=${encodeURIComponent(path)}`;
+            
+            // Forzamos la apertura en una pestaña/ventana externa para que Android lo maneje
+            window.open(obsidianUrl, '_blank');
+        }
+
         function filterNotes() {
             const q = document.getElementById('search').value.toLowerCase();
             renderNotes(allNotes.filter(n => n.title.toLowerCase().includes(q) || n.snippet.toLowerCase().includes(q) || n.folder.toLowerCase().includes(q)));
         }
+        
         loadNotes();
     </script>
 </body>
