@@ -1,0 +1,18 @@
+{
+  "default": [],
+  "cambio-categoria": [],
+  "publicaciones": [
+    {
+      "id": "t_194fac0b",
+      "status": "ready",
+      "assignee": "unassigned",
+      "title": "Revisiones Bibliográficas"
+    },
+    {
+      "id": "t_6317eee6",
+      "status": "ready",
+      "assignee": "unassigned",
+      "title": "Elaborar informe"
+    }
+  ]
+}

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hermes Kanban</title>
+    <style>
+        :root {
+            --bg: #0f172a; --surface: #1e293b; --text: #f8fafc;
+            --text-muted: #94a3b8; --accent: #8b5cf6; --border: #334155;
+            --col-bg: #121e31;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg); color: var(--text);
+            display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+        }
+        header {
+            padding: 16px; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(15, 23, 42, 0.95); z-index: 10;
+        }
+        h1 { font-size: 1.25rem; font-weight: 700; }
+        select {
+            background: var(--surface); color: var(--text); border: 1px solid var(--border);
+            padding: 8px 12px; border-radius: 8px; font-size: 0.9rem; outline: none;
+        }
+        
+        /* Contenedor de tablero (Scroll Horizontal) */
+        .board-container {
+            display: flex; flex: 1; overflow-x: auto; overflow-y: hidden;
+            padding: 16px; gap: 16px; align-items: flex-start;
+        }
+        
+        /* Columnas */
+        .column {
+            background: var(--col-bg); border: 1px solid var(--border);
+            border-radius: 16px; min-width: 280px; width: 85vw; max-width: 320px;
+            display: flex; flex-direction: column; max-height: 100%;
+        }
+        .column-header {
+            padding: 12px 16px; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+            font-weight: 600; color: var(--accent); text-transform: uppercase; font-size: 0.85rem;
+        }
+        .task-count {
+            background: rgba(139, 92, 246, 0.2); padding: 2px 8px; border-radius: 12px; font-size: 0.75rem;
+        }
+        
+        /* Tarjetas de Tareas */
+        .task-list { padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .task-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+        .task-title { font-size: 0.95rem; font-weight: 600; color: var(--text); line-height: 1.3; }
+        .task-meta { display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+        .task-id { font-family: monospace; background: #000; padding: 2px 6px; border-radius: 4px; }
+        .task-assignee { display: flex; align-items: center; gap: 4px; }
+        
+        .empty-col { text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 20px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>📋 Kanban</h1>
+        <select id="board-select" onchange="cambiarTablero()">
+            <option value="">Selecciona un tablero...</option>
+        </select>
+    </header>
+
+    <div class="board-container" id="board-container">
+        <!-- Aquí se inyectan las columnas -->
+    </div>
+
+    <script>
+        let kanbanData = {};
+        const COLUMNS_ORDER = ["ready", "in_progress", "blocked", "done"];
+        const COLUMNS_LABELS = {
+            "ready": "📌 Pendientes",
+            "in_progress": "⏳ En Progreso",
+            "blocked": "🚫 Bloqueadas",
+            "done": "✅ Completadas",
+            "other": "📎 Otras"
+        };
+
+        async function loadKanban() {
+            try {
+                const response = await fetch('kanban.json?t=' + new Date().getTime());
+                kanbanData = await response.json();
+                
+                const select = document.getElementById('board-select');
+                select.innerHTML = ''; // Limpiar
+                
+                // Llenar el selector con los tableros
+                for (const board in kanbanData) {
+                    const option = document.createElement('option');
+                    option.value = board;
+                    option.text = board.toUpperCase();
+                    // Seleccionar el tablero que tiene tareas por defecto
+                    if (kanbanData[board].length > 0) option.selected = true;
+                    select.appendChild(option);
+                }
+                
+                cambiarTablero();
+            } catch (e) {
+                document.getElementById('board-container').innerHTML = '<div class="empty-col">Error al cargar el Kanban.</div>';
+            }
+        }
+
+        function cambiarTablero() {
+            const board = document.getElementById('board-select').value;
+            const container = document.getElementById('board-container');
+            container.innerHTML = '';
+
+            if (!board || !kanbanData[board]) return;
+
+            const tasks = kanbanData[board];
+            
+            // Agrupar tareas por estado
+            const grouped = {};
+            tasks.forEach(task => {
+                const status = task.status.toLowerCase();
+                if (!grouped[status]) grouped[status] = [];
+                grouped[status].push(task);
+            });
+
+            // Renderizar columnas
+            COLUMNS_ORDER.forEach(status => {
+                if (grouped[status] && grouped[status].length > 0) {
+                    container.innerHTML += renderColumn(status, grouped[status]);
+                }
+            });
+
+            // Si no hay tareas
+            if (tasks.length === 0) {
+                container.innerHTML = '<div class="empty-col" style="margin:auto;">🎉 No hay tareas en este tablero.</div>';
+            }
+        }
+
+        function renderColumn(status, tasks) {
+            const label = COLUMNS_LABELS[status] || COLUMNS_LABELS["other"];
+            
+            let html = `<div class="column">
+                <div class="column-header">
+                    <span>${label}</span>
+                    <span class="task-count">${tasks.length}</span>
+                </div>
+                <div class="task-list">`;
+
+            tasks.forEach(task => {
+                html += `<div class="task-card">
+                    <div class="task-title">${task.title}</div>
+                    <div class="task-meta">
+                        <span class="task-id">${task.id}</span>
+                        <span class="task-assignee">👤 ${task.assignee}</span>
+                    </div>
+                </div>`;
+            });
+
+            html += `</div></div>`;
+            return html;
+        }
+
+        loadKanban();
+    </script>
+</body>
+</html>
