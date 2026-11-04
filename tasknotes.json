@@ -1,0 +1,276 @@
+[
+  {
+    "title": "Pagar Nauta hogar",
+    "status": "done",
+    "priority": "high",
+    "due": "2026-08-12",
+    "area": "[[Familiar]]",
+    "tags": [
+      "task"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Tasks/Pagar Nauta hogar.md"
+  },
+  {
+    "title": "Ver a Nancy jefa de departamento de informatica  para organizar infografia",
+    "status": "open",
+    "priority": "high",
+    "due": "2026-10-16",
+    "area": "[[Laboral-académica]]",
+    "tags": [
+      "task",
+      "tareas"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Tasks/Ver a Nancy jefa de departamento de informatica  para organizar infografia.md"
+  },
+  {
+    "title": "Llenar e imprimir modelos de solicitud",
+    "status": "in-progress",
+    "priority": "high",
+    "due": "2026-10-17",
+    "area": "",
+    "tags": [
+      "task"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Tasks/Llenar e imprimir modelos de solicitud.md"
+  },
+  {
+    "title": "Imprimir evidencia para expediente de Cambio de categoría docente",
+    "status": "open",
+    "priority": "high",
+    "due": "2026-10-27",
+    "area": "[[Laboral-académica]]",
+    "tags": [
+      "task"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Tasks/Imprimir evidencia para expediente de Cambio de categoría docente.md"
+  },
+  {
+    "title": "Confeccionar expediente para asistente",
+    "status": "open",
+    "priority": "high",
+    "due": "2026-10-29",
+    "area": "[[Laboral-académica]]",
+    "tags": [
+      "task",
+      "tareas"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Tasks/Confeccionar expediente para asistente.md"
+  },
+  {
+    "title": "Completar chequeo evolutivo de Hipertensión Arterial",
+    "status": "in-progress",
+    "priority": "high",
+    "due": "2026-10-30",
+    "area": "[[Fisiológica]]",
+    "tags": [
+      "task",
+      "tareas"
+    ],
+    "is_project": false,
+    "has_subtasks": true,
+    "path": "TaskNotes/Tasks/Completar chequeo evolutivo de Hipertensión Arterial.md"
+  },
+  {
+    "title": "Optimizar el vault con metodologia PARA y GTD",
+    "status": "in-progress",
+    "priority": "high",
+    "due": "2026-10-31",
+    "area": "",
+    "tags": [
+      "projects",
+      "task"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Tasks/Optimizar el vault con metodologia PARA y GTD.md"
+  },
+  {
+    "title": "Crear dos fuentes de Inversión alternativa",
+    "status": "in-progress",
+    "priority": "high",
+    "due": "2026-11-30",
+    "area": "[[Económica]]",
+    "tags": [
+      "task",
+      "tareas",
+      "projects"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Tasks/Crear dos fuentes de Inversión alternativa.md"
+  },
+  {
+    "title": "Comprar teléfono de Karell",
+    "status": "in-progress",
+    "priority": "high",
+    "due": "2026-11-30",
+    "area": "[[Familiar]]",
+    "tags": [
+      "task",
+      "tareas",
+      "projects"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Tasks/Comprar teléfono de Karell.md"
+  },
+  {
+    "title": "Cambiar categoría docente a asistente",
+    "status": "in-progress",
+    "priority": "high",
+    "due": "2026-12-31",
+    "area": "",
+    "tags": [
+      "task",
+      "projects"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Tasks/Cambiar categoría docente a asistente.md"
+  },
+  {
+    "title": "Reunir 150 USD para teléfono",
+    "status": "open",
+    "priority": "high",
+    "due": "2026-12-31",
+    "area": "['[[Familiar]]']",
+    "tags": [
+      "task"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Tasks/Reunir 150 USD para teléfono.md"
+  },
+  {
+    "title": "Recarga movil",
+    "status": "in-progress",
+    "priority": "medium",
+    "due": "2026-08-13T08:00",
+    "area": "[[Económica]]",
+    "tags": [
+      "task"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Tasks/Recarga movil.md"
+  },
+  {
+    "title": "Ajustar sistema financiero",
+    "status": "open",
+    "priority": "normal",
+    "due": "2026-10-15",
+    "area": "003 AREAS/Económica",
+    "tags": [
+      "task"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Tasks/Ajustar sistema financiero.md"
+  },
+  {
+    "title": "Revisar bibliografias de sepis",
+    "status": "open",
+    "priority": "normal",
+    "due": "2026-10-15 20:00:00-04:00",
+    "area": "['[[Vocacional]]']",
+    "tags": [
+      "task",
+      "tareas"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Tasks/Revisar bibliografias de sepis.md"
+  },
+  {
+    "title": "Confeccionar infografia",
+    "status": "open",
+    "priority": "normal",
+    "due": "2026-10-16",
+    "area": "None",
+    "tags": [
+      "task"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Tasks/Confeccionar infografia.md"
+  },
+  {
+    "title": "Restructurar conferencias de Cardiologia",
+    "status": "in-progress",
+    "priority": "medium",
+    "due": "2026-10-24",
+    "area": "[[Laboral-académica]]",
+    "tags": [
+      "task",
+      "tareas",
+      "projects"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Tasks/Restructurar conferencias de Cardiologia.md"
+  },
+  {
+    "title": "Ver video nuevo de youtube",
+    "status": "open",
+    "priority": "normal",
+    "due": "2026-10-26 15:00:00-04:00",
+    "area": "003 AREAS/Personal/",
+    "tags": [
+      "task"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Tasks/Ver video nuevo de youtube.md"
+  },
+  {
+    "title": "Crear fondo de inversión de 100mil CUP",
+    "status": "open",
+    "priority": "normal",
+    "due": "2026-11-30",
+    "area": "[[Económica]]",
+    "tags": [
+      "task",
+      "tareas",
+      "projects"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Tasks/Crear fondo de inversión de 100mil CUP.md"
+  },
+  {
+    "title": "Instalar sistema de gestión financiera",
+    "status": "open",
+    "priority": "normal",
+    "due": "None",
+    "area": "None",
+    "tags": [
+      "task"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Tasks/Instalar sistema de gestión financiera.md"
+  },
+  {
+    "title": "Ir_a_la_universidad",
+    "status": "open",
+    "priority": "normal",
+    "due": "None",
+    "area": "None",
+    "tags": [
+      "task"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Tasks/Ir_a_la_universidad.md"
+  }
+]
