@@ -1,4 +1,15 @@
 {
+  "_boards": [
+    "default",
+    "cambio-categoria",
+    "publicaciones",
+    "tesis-doctoral"
+  ],
+  "_projects": [
+    "cambio-de-categoria-a-auxiliar",
+    "publicaci-n-cient-fica",
+    "doctorado"
+  ],
   "default": [],
   "cambio-categoria": [
     {
@@ -27,5 +38,6 @@
       "assignee": "unassigned",
       "title": "Buscar bibliografias 2026"
     }
-  ]
+  ],
+  "tesis-doctoral": []
 }
