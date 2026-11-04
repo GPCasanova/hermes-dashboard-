@@ -50,11 +50,12 @@
             const list = document.getElementById('notes-list');
             if (notes.length === 0) { list.innerHTML = '<div style="text-align:center;">No hay notas.</div>'; return; }
             list.innerHTML = notes.slice(0, 100).map(note => {
-                const obsidianUrl = `obsidian://open?vault=${vaultName}&file=${encodeURIComponent(note.path)}`;
+                // Usamos el nuevo puente de redirección en lugar del esquema directo
+                const redirectUrl = `redirect.html?vault=${encodeURIComponent(vaultName)}&file=${encodeURIComponent(note.path)}`;
                 return `<div class="note-card">
                     <div class="note-header"><div class="note-title">${note.title}</div><div class="note-folder">${note.folder}</div></div>
                     <div class="note-snippet">${note.snippet}</div>
-                    <a href="${obsidianUrl}" class="btn-open">📝 Abrir en Obsidian</a>
+                    <a href="${redirectUrl}" class="btn-open">📝 Abrir en Obsidian</a>
                 </div>`;
             }).join('');
         }
