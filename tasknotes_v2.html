@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hermes TaskNotes</title>
+    <style>
+        :root { --bg: #0f172a; --surface: #1e293b; --text: #f8fafc; --text-muted: #94a3b8; --accent: #8b5cf6; --border: #334155; --col-bg: #121e31; --high: #ef4444; --normal: #8b5cf6; --low: #10b981; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        header { padding: 16px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px; background: rgba(15, 23, 42, 0.95); z-index: 10; }
+        h1 { font-size: 1.25rem; font-weight: 700; }
+        .tabs { display: flex; gap: 8px; background: var(--surface); padding: 4px; border-radius: 12px; border: 1px solid var(--border); }
+        .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; color: var(--text-muted); font-size: 0.9rem; font-weight: 600; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        .tab-btn.active { background: var(--accent); color: white; }
+        .board-container { display: flex; flex: 1; overflow-x: auto; overflow-y: hidden; padding: 16px; gap: 16px; align-items: flex-start; }
+        .column { background: var(--col-bg); border: 1px solid var(--border); border-radius: 16px; min-width: 280px; width: 85vw; max-width: 320px; display: flex; flex-direction: column; max-height: 100%; }
+        .column-header { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-weight: 600; color: var(--accent); text-transform: uppercase; font-size: 0.85rem; }
+        .task-count { background: rgba(139, 92, 246, 0.2); padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; }
+        .task-list { padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .task-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); position: relative; overflow: hidden; }
+        .task-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+        .task-card.p-high::before { background: var(--high); }
+        .task-card.p-normal::before { background: var(--normal); }
+        .task-card.p-low::before { background: var(--low); }
+        .task-title { font-size: 0.95rem; font-weight: 600; color: var(--text); line-height: 1.3; }
+        .task-meta { display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; flex-wrap: wrap; gap: 6px; }
+        .task-area { background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; }
+        .task-due { color: #fbbf24; font-weight: 600; }
+        
+        .btn-open { 
+            display: flex; justify-content: center; align-items: center; gap: 6px;
+            width: 100%; text-align: center; background: rgba(139, 92, 246, 0.1); color: var(--accent); 
+            border: 1px solid var(--accent); padding: 10px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; 
+            margin-top: 8px; cursor: pointer; font-family: inherit; transition: 0.2s;
+        }
+        .btn-open:active { background: var(--accent); color: white; }
+        .empty-col { text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 20px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>📝 TaskNotes</h1>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('tasks')">📌 Tareas</button>
+            <button class="tab-btn" onclick="switchTab('projects')">📂 Proyectos</button>
+        </div>
+    </header>
+
+    <div class="board-container" id="board-container"></div>
+
+    <script>
+        let allTasks = [];
+        let currentTab = 'tasks';
+        const COLUMNS_ORDER = ["open", "in-progress", "done"];
+        const COLUMNS_LABELS = { "open": "📌 Pendientes", "in-progress": "⏳ En Progreso", "done": "✅ Completadas" };
+
+        async function loadTasks() {
+            try {
+                const response = await fetch('tasknotes.json?t=' + new Date().getTime());
+                allTasks = await response.json();
+                renderBoard();
+            } catch (e) { document.getElementById('board-container').innerHTML = '<div class="empty-col">Error al cargar.</div>'; }
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            renderBoard();
+        }
+
+        function renderBoard() {
+            const container = document.getElementById('board-container');
+            container.innerHTML = '';
+
+            const filteredTasks = allTasks.filter(t => currentTab === 'projects' ? t.is_project === true : t.is_project === false);
+
+            if (filteredTasks.length === 0) {
+                container.innerHTML = `<div class="empty-col" style="margin:auto;">🎉 No hay ${currentTab === 'projects' ? 'proyectos' : 'tareas'}.</div>`;
+                return;
+            }
+
+            const grouped = {};
+            filteredTasks.forEach(task => {
+                const status = task.status === 'in-progress' ? 'in-progress' : (task.status === 'done' ? 'done' : 'open');
+                if (!grouped[status]) grouped[status] = [];
+                grouped[status].push(task);
+            });
+
+            COLUMNS_ORDER.forEach(status => {
+                if (grouped[status] && grouped[status].length > 0) {
+                    container.innerHTML += renderColumn(status, grouped[status]);
+                }
+            });
+        }
+
+        function renderColumn(status, tasks) {
+            const label = COLUMNS_LABELS[status];
+            let html = `<div class="column">
+                <div class="column-header"><span>${label}</span><span class="task-count">${tasks.length}</span></div>
+                <div class="task-list">`;
+
+            tasks.forEach(task => {
+                const priorityClass = `p-${task.priority}`;
+                const obsidianUrl = `obsidian://open?vault=CDGePeCa&file=${encodeURIComponent(task.path)}`;
+                const androidIntent = `intent://open?vault=CDGePeCa&file=${encodeURIComponent(task.path)}#Intent;scheme=obsidian;package=md.obsidian;end`;
+                
+                html += `<div class="task-card ${priorityClass}">
+                    <div class="task-title">${task.title}</div>
+                    <div class="task-meta">
+                        ${task.area ? `<span class="task-area">${task.area.replace(/\[\[|\]\]/g, '')}</span>` : '<span></span>'}
+                        ${task.due ? `<span class="task-due">📅 ${task.due}</span>` : ''}
+                    </div>
+                    <button class="btn-open" onclick="abrirObsidian('${androidIntent}', '${obsidianUrl}')">✏️ Editar en Obsidian</button>
+                </div>`;
+            });
+
+            html += `</div></div>`;
+            return html;
+        }
+
+        function abrirObsidian(intentUrl, httpUrl) {
+            try {
+                window.location.href = intentUrl;
+            } catch (e) {
+                window.location.href = httpUrl;
+            }
+        }
+
+        loadTasks();
+    </script>
+</body>
+</html>
