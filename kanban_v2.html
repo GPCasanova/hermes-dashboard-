@@ -17,21 +17,20 @@
         .btn-tool.primary { background: var(--accent); color: white; border-color: var(--accent); }
         select { background: var(--surface); color: var(--text); border: 1px solid var(--border); padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; outline: none; }
         .board-container { display: flex; flex: 1; overflow-x: auto; overflow-y: hidden; padding: 14px; gap: 14px; align-items: flex-start; }
-        .column { background: var(--col-bg); border: 1px solid var(--border); border-radius: 14px; min-width: 270px; width: 82vw; max-width: 310px; display: flex; flex-direction: column; max-height: 100%; }
+        .column { background: var(--col-bg); border: 1px solid var(--border); border-radius: 14px; min-width: 250px; width: 78vw; max-width: 290px; display: flex; flex-direction: column; max-height: 100%; }
         .column-header { padding: 11px 14px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-weight: 600; color: var(--accent); text-transform: uppercase; font-size: 0.8rem; }
         .task-count { background: rgba(139,92,246,.2); padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; }
-        .task-list { padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .task-list { padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; min-height: 60px; }
         .task-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 6px; }
         .task-title { font-size: 0.9rem; font-weight: 600; line-height: 1.3; }
         .task-meta { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); }
         .task-id { font-family: monospace; background: #000; padding: 1px 5px; border-radius: 3px; }
         .task-actions { display: flex; gap: 6px; margin-top: 6px; }
         .btn-act { flex: 1; background: transparent; border: 1px solid var(--border); color: var(--text); padding: 6px; border-radius: 6px; font-size: 0.9rem; cursor: pointer; }
-        .btn-act:hover { background: rgba(255,255,255,.05); }
         .btn-act.ok { border-color: var(--green); color: var(--green); }
         .btn-act.block { border-color: var(--red); color: var(--red); }
         .btn-act.unblock { border-color: var(--yellow); color: var(--yellow); }
-        .empty-col { text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 20px; }
+        .empty-col { text-align: center; color: var(--text-muted); font-size: 0.8rem; padding: 20px; }
         .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,.8); display:none; justify-content:center; align-items:center; z-index:200; }
         .modal-overlay.show { display: flex; }
         .modal-content { background: var(--surface); border: 1px solid var(--border); padding: 20px; border-radius: 14px; width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 12px; max-height: 90vh; overflow-y: auto; }
@@ -65,18 +64,13 @@
 
     <div class="board-container" id="board-container"></div>
 
-    <!-- Modal: Nueva Tarea -->
     <div class="modal-overlay" id="modal-tarea">
         <div class="modal-content">
             <h2>➕ Nueva Tarea</h2>
             <label>Título</label>
             <input type="text" id="tarea-title" placeholder="Ej: Preparar presentación">
             <label>Tablero</label>
-            <select id="tarea-board">
-                <option value="publicaciones">publicaciones</option>
-                <option value="cambio-categoria">cambio-categoria</option>
-                <option value="default">default</option>
-            </select>
+            <select id="tarea-board"></select>
             <label>Prioridad</label>
             <select id="tarea-priority">
                 <option value="normal">Normal</option>
@@ -90,7 +84,6 @@
         </div>
     </div>
 
-    <!-- Modal: Nuevo Tablero -->
     <div class="modal-overlay" id="modal-tablero">
         <div class="modal-content">
             <h2>📋 Nuevo Tablero</h2>
@@ -104,7 +97,6 @@
         </div>
     </div>
 
-    <!-- Modal: Nuevo Proyecto -->
     <div class="modal-overlay" id="modal-proyecto">
         <div class="modal-content">
             <h2>📁 Nuevo Proyecto</h2>
@@ -117,12 +109,11 @@
         </div>
     </div>
 
-    <!-- Modal: Añadir Carpeta a Proyecto -->
     <div class="modal-overlay" id="modal-carpeta">
         <div class="modal-content">
             <h2>📂 Añadir Carpeta a Proyecto</h2>
             <label>Proyecto</label>
-            <input type="text" id="carpeta-project" placeholder="Slug del proyecto">
+            <select id="carpeta-project"></select>
             <label>Ruta de la carpeta</label>
             <input type="text" id="carpeta-path" placeholder="/home/droidmaster/proyectos/tesis">
             <div class="modal-buttons">
@@ -132,18 +123,13 @@
         </div>
     </div>
 
-    <!-- Modal: Vincular Tablero a Proyecto -->
     <div class="modal-overlay" id="modal-vincular">
         <div class="modal-content">
             <h2>🔗 Vincular Tablero a Proyecto</h2>
             <label>Proyecto</label>
-            <input type="text" id="vincular-project" placeholder="Slug del proyecto">
+            <select id="vincular-project"></select>
             <label>Tablero</label>
-            <select id="vincular-board">
-                <option value="publicaciones">publicaciones</option>
-                <option value="cambio-categoria">cambio-categoria</option>
-                <option value="default">default</option>
-            </select>
+            <select id="vincular-board"></select>
             <div class="modal-buttons">
                 <button class="btn-cancel" onclick="closeModal('vincular')">Cancelar</button>
                 <button class="btn-confirm" onclick="enviar('vincular')">Vincular →</button>
@@ -151,7 +137,6 @@
         </div>
     </div>
 
-    <!-- Modal: Bloquear Tarea -->
     <div class="modal-overlay" id="modal-bloquear">
         <div class="modal-content">
             <h2>🚫 Bloquear Tarea</h2>
@@ -171,6 +156,8 @@
         if (tg) tg.expand();
 
         let kanbanData = {};
+        let boards = [];
+        let projects = [];
         let blq = { id: null, board: null };
 
         const COLUMNS_ORDER = ["ready", "in_progress", "blocked", "done"];
@@ -178,22 +165,74 @@
             "ready": "📌 Pendientes",
             "in_progress": "⏳ En Progreso",
             "blocked": "🚫 Bloqueadas",
-            "done": "✅ Completadas",
-            "other": "📎 Otras"
+            "done": "✅ Completadas"
         };
+
+        function populateSelects() {
+            // Select de tablero principal
+            const selBoard = document.getElementById('board-select');
+            selBoard.innerHTML = '';
+            boards.forEach(b => {
+                const o = document.createElement('option');
+                o.value = b; o.text = b.toUpperCase();
+                selBoard.appendChild(o);
+            });
+
+            // Select de tablero en "Nueva Tarea"
+            const tareaBoard = document.getElementById('tarea-board');
+            tareaBoard.innerHTML = '';
+            boards.forEach(b => {
+                const o = document.createElement('option');
+                o.value = b; o.text = b;
+                tareaBoard.appendChild(o);
+            });
+
+            // Select de tablero en "Vincular"
+            const vincBoard = document.getElementById('vincular-board');
+            vincBoard.innerHTML = '';
+            boards.forEach(b => {
+                const o = document.createElement('option');
+                o.value = b; o.text = b;
+                vincBoard.appendChild(o);
+            });
+
+            // Selects de proyecto (carpeta y vincular)
+            ['carpeta-project', 'vincular-project'].forEach(id => {
+                const sel = document.getElementById(id);
+                sel.innerHTML = '';
+                if (projects.length === 0) {
+                    const o = document.createElement('option');
+                    o.value = ''; o.text = '(no hay proyectos)';
+                    sel.appendChild(o);
+                } else {
+                    projects.forEach(p => {
+                        const o = document.createElement('option');
+                        o.value = p; o.text = p;
+                        sel.appendChild(o);
+                    });
+                }
+            });
+        }
 
         async function loadKanban() {
             try {
                 const r = await fetch('kanban.json?t=' + Date.now());
                 kanbanData = await r.json();
-                const sel = document.getElementById('board-select');
-                sel.innerHTML = '';
-                for (const b in kanbanData) {
-                    const o = document.createElement('option');
-                    o.value = b; o.text = b.toUpperCase();
-                    if (kanbanData[b].length > 0) o.selected = true;
-                    sel.appendChild(o);
+                boards = kanbanData._boards || [];
+                projects = kanbanData._projects || [];
+
+                if (boards.length === 0) boards = ["default"];
+                populateSelects();
+
+                // Seleccionar el primer board que tenga tareas, o el primero
+                let boardInicial = boards[0];
+                for (const b of boards) {
+                    if (Array.isArray(kanbanData[b]) && kanbanData[b].length > 0) {
+                        boardInicial = b; break;
+                    }
                 }
+                document.getElementById('board-select').value = boardInicial;
+
                 cambiarTablero();
             } catch (e) {
                 document.getElementById('board-container').innerHTML = '<div class="empty-col">Error al cargar.</div>';
@@ -204,37 +243,42 @@
             const board = document.getElementById('board-select').value;
             const c = document.getElementById('board-container');
             c.innerHTML = '';
-            if (!board || !kanbanData[board]) return;
-            const tasks = kanbanData[board];
+            if (!board) return;
+            const tasks = kanbanData[board] || [];
             const g = {};
             tasks.forEach(t => { const s = t.status.toLowerCase(); if (!g[s]) g[s]=[]; g[s].push(t); });
-            COLUMNS_ORDER.forEach(s => { if (g[s]?.length) c.innerHTML += renderCol(s, g[s], board); });
-            if (tasks.length === 0) c.innerHTML = '<div class="empty-col" style="margin:auto;">🎉 No hay tareas.</div>';
+
+            // Renderizar TODAS las columnas (aunque estén vacías)
+            COLUMNS_ORDER.forEach(s => {
+                c.innerHTML += renderCol(s, g[s] || [], board);
+            });
         }
 
         function renderCol(status, tasks, board) {
-            const label = COLUMNS_LABELS[status] || COLUMNS_LABELS["other"];
+            const label = COLUMNS_LABELS[status];
             let h = `<div class="column"><div class="column-header"><span>${label}</span><span class="task-count">${tasks.length}</span></div><div class="task-list">`;
-            tasks.forEach(t => {
-                const titleSafe = (t.title || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                h += `<div class="task-card">
-                    <div class="task-title">${t.title}</div>
-                    <div class="task-meta"><span class="task-id">${t.id}</span><span>👤 ${t.assignee || '-'}</span></div>
-                    <div class="task-actions">
-                        <button class="btn-act ok" onclick="completar('${t.id}','${board}')">✅</button>
-                        <button class="btn-act block" onclick="abrirBloquear('${t.id}','${board}','${titleSafe}')">🚫</button>
-                        <button class="btn-act unblock" onclick="desbloquear('${t.id}','${board}')">▶️</button>
-                    </div>
-                </div>`;
-            });
+            if (tasks.length === 0) {
+                h += `<div class="empty-col">Sin tareas</div>`;
+            } else {
+                tasks.forEach(t => {
+                    const titleSafe = (t.title || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    h += `<div class="task-card">
+                        <div class="task-title">${t.title}</div>
+                        <div class="task-meta"><span class="task-id">${t.id}</span><span>👤 ${t.assignee || '-'}</span></div>
+                        <div class="task-actions">
+                            <button class="btn-act ok" onclick="completar('${t.id}','${board}')">✅</button>
+                            <button class="btn-act block" onclick="abrirBloquear('${t.id}','${board}','${titleSafe}')">🚫</button>
+                            <button class="btn-act unblock" onclick="desbloquear('${t.id}','${board}')">▶️</button>
+                        </div>
+                    </div>`;
+                });
+            }
             return h + '</div></div>';
         }
 
-        // --- Gestión de modales ---
         function openModal(id) { document.getElementById('modal-' + id).classList.add('show'); }
         function closeModal(id) { document.getElementById('modal-' + id).classList.remove('show'); }
 
-        // --- Enviar según modal ---
         function enviar(tipo) {
             if (!tg) { alert('Abre esto desde Telegram'); return; }
             let payload = null;
@@ -243,33 +287,32 @@
                 const title = document.getElementById('tarea-title').value.trim();
                 if (!title) { alert('Falta el título'); return; }
                 payload = {
-                    action: 'kanban_create',
-                    title: title,
+                    action: 'kanban_create', title,
                     board: document.getElementById('tarea-board').value,
                     priority: document.getElementById('tarea-priority').value
                 };
             } else if (tipo === 'tablero') {
                 const slug = document.getElementById('tablero-slug').value.trim().toLowerCase();
-                if (!/^[a-z0-9-]+$/.test(slug)) { alert('Slug inválido (solo a-z, 0-9, guiones)'); return; }
-                payload = { action: 'kanban_board_create', slug: slug };
+                if (!/^[a-z0-9-]+$/.test(slug)) { alert('Slug inválido (a-z, 0-9, guiones)'); return; }
+                payload = { action: 'kanban_board_create', slug };
             } else if (tipo === 'proyecto') {
                 const name = document.getElementById('proyecto-name').value.trim();
                 if (!name) { alert('Falta el nombre'); return; }
-                payload = { action: 'project_create', name: name };
+                payload = { action: 'project_create', name };
             } else if (tipo === 'carpeta') {
-                const project = document.getElementById('carpeta-project').value.trim();
+                const project = document.getElementById('carpeta-project').value;
                 const path = document.getElementById('carpeta-path').value.trim();
                 if (!project || !path) { alert('Faltan campos'); return; }
-                payload = { action: 'project_add_folder', project: project, path: path };
+                payload = { action: 'project_add_folder', project, path };
             } else if (tipo === 'vincular') {
-                const project = document.getElementById('vincular-project').value.trim();
+                const project = document.getElementById('vincular-project').value;
                 const board = document.getElementById('vincular-board').value;
                 if (!project || !board) { alert('Faltan campos'); return; }
-                payload = { action: 'project_bind_board', project: project, board: board };
+                payload = { action: 'project_bind_board', project, board };
             } else if (tipo === 'bloquear') {
                 const reason = document.getElementById('bloq-reason').value.trim();
                 if (!reason) { alert('Falta la razón'); return; }
-                payload = { action: 'kanban_block', task_id: blq.id, board: blq.board, reason: reason };
+                payload = { action: 'kanban_block', task_id: blq.id, board: blq.board, reason };
             }
 
             if (!payload) return;
@@ -277,7 +320,6 @@
             tg.close();
         }
 
-        // --- Acciones rápidas desde tarjeta ---
         function completar(id, board) {
             if (!tg) return;
             tg.sendData(JSON.stringify({ action: 'kanban_complete', task_id: id, board }));
