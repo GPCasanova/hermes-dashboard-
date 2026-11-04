@@ -1,6 +1,13 @@
 {
   "default": [],
-  "cambio-categoria": [],
+  "cambio-categoria": [
+    {
+      "id": "t_21b74dbc",
+      "status": "ready",
+      "assignee": "unassigned",
+      "title": "Completar curriculum vitae"
+    }
+  ],
   "publicaciones": [
     {
       "id": "t_194fac0b",
