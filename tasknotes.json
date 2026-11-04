@@ -1,5 +1,92 @@
 [
   {
+    "title": "Subir bibliografias a Drive",
+    "status": "done",
+    "priority": "high",
+    "due": "2026-07-05",
+    "area": "",
+    "tags": [
+      "task",
+      "archived"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Archive/Subir bibliografias a Drive.md"
+  },
+  {
+    "title": "Pagar $5000 a Yadira",
+    "status": "done",
+    "priority": "high",
+    "due": "2026-07-10",
+    "area": "",
+    "tags": [
+      "task",
+      "tareas",
+      "archived"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Archive/Pagar $5000 a Yadira.md"
+  },
+  {
+    "title": "Comprar un saco de Carbón",
+    "status": "done",
+    "priority": "high",
+    "due": "2026-07-12",
+    "area": "[[Familiar]]",
+    "tags": [
+      "task",
+      "tareas",
+      "archived"
+    ],
+    "is_project": false,
+    "has_subtasks": true,
+    "path": "TaskNotes/Archive/Comprar un saco de Carbón.md"
+  },
+  {
+    "title": "Comprar insumos a Mai María",
+    "status": "done",
+    "priority": "high",
+    "due": "2026-07-16",
+    "area": "[[Familiar]]",
+    "tags": [
+      "task",
+      "tareas",
+      "archived"
+    ],
+    "is_project": false,
+    "has_subtasks": true,
+    "path": "TaskNotes/Archive/Comprar insumos a Mai María.md"
+  },
+  {
+    "title": "Pagar $ Francisca",
+    "status": "done",
+    "priority": "high",
+    "due": "2026-07-21",
+    "area": "None",
+    "tags": [
+      "task",
+      "archived"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Archive/Pagar $ Francisca.md"
+  },
+  {
+    "title": "Pagar $ Nayra",
+    "status": "done",
+    "priority": "high",
+    "due": "2026-07-21",
+    "area": "None",
+    "tags": [
+      "task",
+      "archived"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Archive/Pagar $ Nayra.md"
+  },
+  {
     "title": "Pagar Nauta hogar",
     "status": "done",
     "priority": "high",
@@ -11,6 +98,20 @@
     "is_project": false,
     "has_subtasks": false,
     "path": "TaskNotes/Tasks/Pagar Nauta hogar.md"
+  },
+  {
+    "title": "Crear los comandos externos para obsidian",
+    "status": "done",
+    "priority": "high",
+    "due": "2026-08-14T16:00",
+    "area": "None",
+    "tags": [
+      "task",
+      "archived"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Archive/Crear los comandos externos para obsidian.md"
   },
   {
     "title": "Ver a Nancy jefa de departamento de informatica  para organizar infografia",
@@ -152,6 +253,95 @@
     "path": "TaskNotes/Tasks/Reunir 150 USD para teléfono.md"
   },
   {
+    "title": "Firmar papeles de proyecto en la Direccion mañana",
+    "status": "done",
+    "priority": "normal",
+    "due": "2026-07-03",
+    "area": "",
+    "tags": [
+      "task",
+      "tareas",
+      "archived"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Archive/Firmar papeles de proyecto en la Direccion mañana.md"
+  },
+  {
+    "title": "Llamar a Elizabeth buscar arroz a las",
+    "status": "done",
+    "priority": "none",
+    "due": "2026-07-08T08:00",
+    "area": "",
+    "tags": [
+      "#task",
+      "archived"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Archive/Llamar a Elizabeth buscar arroz a las.md"
+  },
+  {
+    "title": "Pagar factura electrica",
+    "status": "done",
+    "priority": "normal",
+    "due": "2026-07-11",
+    "area": "[[Familiar]]",
+    "tags": [
+      "task",
+      "tareas",
+      "archived"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Archive/Pagar factura electrica.md"
+  },
+  {
+    "title": "Organizar por carpetas la bóveda según la experiencia anterior",
+    "status": "done",
+    "priority": "normal",
+    "due": "2026-07-11",
+    "area": "[[Vocacional]]",
+    "tags": [
+      "task",
+      "tareas",
+      "archived"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Archive/Organizar por carpetas la bóveda según la experiencia anterior.md"
+  },
+  {
+    "title": "Comprar carnicos del mes",
+    "status": "done",
+    "priority": "normal",
+    "due": "2026-07-15",
+    "area": "[[Familiar]]",
+    "tags": [
+      "task",
+      "tareas",
+      "archived"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Archive/Comprar carnicos del mes.md"
+  },
+  {
+    "title": "Pagar $3800 a Kirenia",
+    "status": "done",
+    "priority": "normal",
+    "due": "2026-08-10",
+    "area": "[[Económica]]",
+    "tags": [
+      "task",
+      "tareas",
+      "archived"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Archive/Pagar $3800 a Kirenia.md"
+  },
+  {
     "title": "Recarga movil",
     "status": "in-progress",
     "priority": "medium",
@@ -163,6 +353,19 @@
     "is_project": false,
     "has_subtasks": false,
     "path": "TaskNotes/Tasks/Recarga movil.md"
+  },
+  {
+    "title": "Coordinar medición lente de Aurora",
+    "status": "done",
+    "priority": "normal",
+    "due": "2026-10-14 09:00:00-04:00",
+    "area": "None",
+    "tags": [
+      "task"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Archive/Coordinar medición lente de Aurora.md"
   },
   {
     "title": "Ajustar sistema financiero",
@@ -272,5 +475,19 @@
     "is_project": false,
     "has_subtasks": false,
     "path": "TaskNotes/Tasks/Ir_a_la_universidad.md"
+  },
+  {
+    "title": "Probar la skill crear-nota",
+    "status": "done",
+    "priority": "normal",
+    "due": "None",
+    "area": "None",
+    "tags": [
+      "task",
+      "archived"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Archive/Probar la skill crear-nota.md"
   }
 ]
