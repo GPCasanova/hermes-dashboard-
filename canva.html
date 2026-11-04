@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hermes Canva</title>
+    <style>
+        :root { 
+            --bg: #0f172a; --surface: #1e293b; --text: #f8fafc; 
+            --text-muted: #94a3b8; --accent: #8b5cf6; --border: #334155; 
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background: var(--bg); color: var(--text); 
+            display: flex; flex-direction: column; min-height: 100vh; 
+        }
+        header { 
+            position: sticky; top: 0; width: 100%; 
+            background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); 
+            z-index: 100; border-bottom: 1px solid var(--border); 
+            padding: 16px; display: flex; justify-content: space-between; align-items: center; 
+        }
+        h1 { font-size: 1.25rem; font-weight: 700; }
+        .badge-count { 
+            font-size: 0.75rem; background: var(--surface); border: 1px solid var(--border); 
+            padding: 4px 10px; border-radius: 20px; color: var(--text-muted); 
+        }
+        
+        /* Cuadrícula de diseños */
+        .grid-container { 
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
+            gap: 16px; padding: 16px; max-width: 800px; margin: 0 auto; width: 100%; 
+        }
+        
+        /* Tarjeta de diseño */
+        .design-card { 
+            background: var(--surface); border: 1px solid var(--border); 
+            border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; 
+            transition: transform 0.2s ease; text-decoration: none; color: inherit;
+        }
+        .design-card:active { transform: scale(0.98); }
+        
+        /* Miniatura */
+        .thumbnail-container { 
+            width: 100%; height: 200px; background: #000; 
+            display: flex; justify-content: center; align-items: center; overflow: hidden; 
+        }
+        .thumbnail-container img { 
+            width: 100%; height: 100%; object-fit: cover; display: block; 
+        }
+        
+        /* Detalles */
+        .design-info { padding: 12px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+        .design-title { 
+            font-size: 0.85rem; font-weight: 600; line-height: 1.3; 
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; 
+        }
+        .btn-open { 
+            display: flex; justify-content: center; align-items: center; gap: 6px; 
+            width: 100%; background: rgba(139, 92, 246, 0.1); color: var(--accent); 
+            border: 1px solid var(--accent); padding: 8px; border-radius: 8px; 
+            font-size: 0.75rem; font-weight: 600; cursor: pointer; font-family: inherit; 
+            margin-top: auto; 
+        }
+        .empty-state { text-align: center; color: var(--text-muted); grid-column: 1 / -1; padding: 40px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🎨 Mis Diseños Canva</h1>
+        <div class="badge-count" id="count">Cargando...</div>
+    </header>
+
+    <div class="grid-container" id="grid"></div>
+
+    <script>
+        async function loadDesigns() {
+            try {
+                const response = await fetch('canva.json?t=' + new Date().getTime());
+                const designs = await response.json();
+                
+                document.getElementById('count').innerText = designs.length + " diseños";
+                const grid = document.getElementById('grid');
+
+                if (designs.length === 0) {
+                    grid.innerHTML = '<div class="empty-state">No tienes diseños en Canva.</div>';
+                    return;
+                }
+
+                grid.innerHTML = designs.map(design => {
+                    // Si el título está vacío, usamos uno genérico
+                    const title = design.title && design.title !== "Sin título" ? design.title : "Diseño de Canva";
+                    // Usamos una imagen de respaldo si no hay thumbnail
+                    const imgUrl = design.thumbnail || 'https://via.placeholder.com/300x200/1e293b/94a3b8?text=Sin+Imagen';
+                    
+                    return `
+                        <a href="${design.edit_url}" target="_blank" class="design-card">
+                            <div class="thumbnail-container">
+                                <img src="${imgUrl}" alt="${title}" loading="lazy">
+                            </div>
+                            <div class="design-info">
+                                <div class="design-title">${title}</div>
+                                <button class="btn-open">🎨 Abrir en Canva</button>
+                            </div>
+                        </a>
+                    `;
+                }).join('');
+            } catch (e) {
+                document.getElementById('grid').innerHTML = '<div class="empty-state">Error al cargar los diseños.</div>';
+            }
+        }
+
+        loadDesigns();
+    </script>
+</body>
+</html>
