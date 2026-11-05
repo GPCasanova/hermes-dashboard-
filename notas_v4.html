@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Hermes Notas</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+:root{--bg:#0f172a;--surface:#1e293b;--text:#f8fafc;--muted:#94a3b8;--accent:#8b5cf6;--border:#334155;--green:#10b981;--yellow:#fbbf24}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;height:100vh;overflow:hidden}
+header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:10px;background:rgba(15,23,42,.95);z-index:10}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+h1{font-size:1.1rem;font-weight:700}
+.search-box{width:100%;display:flex;gap:6px}
+input,select,textarea{width:100%;background:var(--surface);color:var(--text);border:1px solid var(--border);padding:10px;border-radius:8px;font-size:.9rem;outline:none;font-family:inherit}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+.tabs{display:flex;gap:4px;background:var(--surface);padding:4px;border-radius:10px;border:1px solid var(--border)}
+.tabs button{flex:1;padding:7px;background:transparent;border:none;color:var(--muted);font-weight:600;font-size:.8rem;border-radius:8px;cursor:pointer;font-family:inherit}
+.tabs button.active{background:var(--accent);color:white}
+.sort-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.sort-btn{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:8px;font-size:.75rem;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit}
+.sort-btn.active{background:var(--accent);color:white;border-color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px;padding:12px;overflow-y:auto;flex:1}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px;display:flex;flex-direction:column;gap:5px;cursor:pointer;transition:0.15s;position:relative}
+.card:hover{border-color:var(--accent);transform:translateY(-1px)}
+.card-fav{position:absolute;top:8px;right:8px;font-size:1rem;cursor:pointer;background:none;border:none;color:var(--muted);padding:0;line-height:1}
+.card-fav.on{color:var(--yellow)}
+.card-title{font-size:.88rem;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;padding-right:22px}
+.card-folder{font-size:.6rem;color:var(--accent);text-transform:uppercase;font-weight:600;background:rgba(139,92,246,.1);padding:2px 6px;border-radius:4px;align-self:flex-start;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card-snippet{font-size:.72rem;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-date{font-size:.6rem;color:var(--muted);margin-top:auto;text-align:right}
+.empty{text-align:center;color:var(--muted);grid-column:1/-1;padding:40px}
+.reader{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:200;display:none;flex-direction:column}
+.reader.show{display:flex}
+.reader-header{padding:10px 14px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.reader-title{font-weight:600;font-size:.95rem;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.btn-close{background:transparent;border:none;color:var(--muted);font-size:1.4rem;cursor:pointer;padding:0 6px}
+.btn-obsidian{background:var(--accent);color:white;border:none;padding:7px 10px;border-radius:6px;font-size:.75rem;font-weight:600;cursor:pointer;white-space:nowrap;text-decoration:none;font-family:inherit}
+.btn-secondary{background:var(--surface);color:var(--text);border:1px solid var(--border);padding:7px 10px;border-radius:6px;font-size:.75rem;font-weight:600;cursor:pointer;font-family:inherit}
+.reader-body{flex:1;overflow-y:auto;padding:16px;font-size:.95rem;line-height:1.6;max-width:800px;margin:0 auto;width:100%}
+.reader-body h1,.reader-body h2,.reader-body h3{margin-top:1.5em;margin-bottom:.5em;color:var(--accent)}
+.reader-body p{margin-bottom:1em}
+.reader-body a,.reader-body a.wikilink{color:#60a5fa;text-decoration:none;cursor:pointer}
+.reader-body a.wikilink{background:rgba(139,92,246,.15);padding:1px 4px;border-radius:3px}
+.reader-body code{background:#000;padding:2px 6px;border-radius:4px;font-family:monospace;font-size:.85rem}
+.reader-body pre{background:#000;padding:10px;border-radius:8px;overflow-x:auto;margin-bottom:1em}
+.reader-body blockquote{border-left:4px solid var(--accent);padding-left:10px;color:var(--muted);margin-bottom:1em}
+.modal-crear{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:300;display:none;flex-direction:column}
+.modal-crear.show{display:flex}
+.modal-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.modal-body label{font-size:.75rem;color:var(--muted);margin-bottom:-6px;margin-top:4px}
+</style>
+</head>
+<body>
+<header>
+  <div class="row">
+    <h1>Hermes Notas</h1>
+    <button class="btn-obsidian" onclick="openModalCrear()">+ Nota</button>
+  </div>
+  <div class="tabs">
+    <button id="tab-todas" class="active" onclick="setTab('todas')">Todas</button>
+    <button id="tab-recientes" onclick="setTab('recientes')">Recientes</button>
+    <button id="tab-favoritos" onclick="setTab('favoritos')">Favoritos</button>
+  </div>
+  <div class="search-box">
+    <input type="text" id="search" placeholder="Buscar en notas..." oninput="filterNotes()">
+    <select id="folder-filter" onchange="filterNotes()">
+      <option value="">Todas las carpetas</option>
+    </select>
+  </div>
+  <div class="sort-row">
+    <button class="sort-btn active" id="sort-mtime" onclick="setSort('mtime')">Fecha</button>
+    <button class="sort-btn" id="sort-title" onclick="setSort('title')">Titulo A-Z</button>
+    <button class="sort-btn" id="sort-folder" onclick="setSort('folder')">Carpeta</button>
+  </div>
+</header>
+
+<div class="grid" id="grid"></div>
+
+<!-- Lector de Notas -->
+<div class="reader" id="reader">
+  <div class="reader-header">
+    <button class="btn-close" onclick="closeReader()">X</button>
+    <div class="reader-title" id="reader-title">Nota</div>
+    <button class="btn-secondary" onclick="openAppendModal()">+ Anadir</button>
+    <button class="btn-secondary" onclick="openKanbanModal()">→ Kanban</button>
+    <a href="#" class="btn-obsidian" id="reader-obsidian-link">Obsidian</a>
+  </div>
+  <div class="reader-body" id="reader-body"></div>
+</div>
+
+<!-- Modal Nueva Nota -->
+<div class="modal-crear" id="modal-crear">
+  <div class="reader-header">
+    <button class="btn-close" onclick="closeModalCrear()">X</button>
+    <div class="reader-title">Nueva Nota</div>
+    <div style="width:36px"></div>
+  </div>
+  <div class="modal-body">
+    <label>Titulo</label>
+    <input type="text" id="nueva-title" placeholder="Ej: Ideas para proyecto">
+    <label>Tipo de nota</label>
+    <select id="nueva-tipo">
+      <option value="concepto">Concepto</option>
+      <option value="tarea">Tarea</option>
+      <option value="reunion">Reunion</option>
+      <option value="literatura">Literatura</option>
+    </select>
+    <label>Contenido</label>
+    <textarea id="nueva-content" placeholder="Escribe aqui..." style="height:200px;resize:none;"></textarea>
+    <button class="btn-obsidian" onclick="crearNota()" style="padding:14px;">Guardar en INBOX</button>
+  </div>
+</div>
+
+<!-- Modal Append (anadir texto a nota existente) -->
+<div class="modal-crear" id="modal-append">
+  <div class="reader-header">
+    <button class="btn-close" onclick="closeAppendModal()">X</button>
+    <div class="reader-title">Anadir a la nota</div>
+    <div style="width:36px"></div>
+  </div>
+  <div class="modal-body">
+    <label>Texto a anadir al final</label>
+    <textarea id="append-content" placeholder="Escribe aqui lo que quieres anadir..." style="height:240px;resize:none;"></textarea>
+    <button class="btn-obsidian" onclick="enviarAppend()" style="padding:14px;">Anadir al final</button>
+  </div>
+</div>
+<script>
+const tg = window.Telegram?.WebApp;
+if (tg) tg.expand();
+
+const vaultName = "CDGePeCa";
+let allNotes = [];
+let currentTab = 'todas';
+let currentSort = 'mtime';
+let currentNote = null;
+let favorites = JSON.parse(localStorage.getItem('hermes-favs') || '{}');
+
+function saveFavs() {
+  localStorage.setItem('hermes-favs', JSON.stringify(favorites));
+}
+
+function setTab(t) {
+  currentTab = t;
+  document.getElementById('tab-todas').classList.toggle('active', t === 'todas');
+  document.getElementById('tab-recientes').classList.toggle('active', t === 'recientes');
+  document.getElementById('tab-favoritos').classList.toggle('active', t === 'favoritos');
+  filterNotes();
+}
+
+function setSort(s) {
+  currentSort = s;
+  document.getElementById('sort-mtime').classList.toggle('active', s === 'mtime');
+  document.getElementById('sort-title').classList.toggle('active', s === 'title');
+  document.getElementById('sort-folder').classList.toggle('active', s === 'folder');
+  filterNotes();
+}
+
+async function loadNotes() {
+  try {
+    const r = await fetch('vault.json?t=' + Date.now());
+    allNotes = await r.json();
+    populateFolders();
+    filterNotes();
+  } catch (e) {
+    document.getElementById('grid').innerHTML = '<div class="empty">Error al cargar notas</div>';
+  }
+}
+
+function populateFolders() {
+  const folders = [...new Set(allNotes.map(n => n.folder))].sort();
+  const sel = document.getElementById('folder-filter');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">Todas las carpetas</option>';
+  folders.forEach(f => {
+    const o = document.createElement('option');
+    o.value = f; o.text = f;
+    if (f === current) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+
+function filterNotes() {
+  const q = (document.getElementById('search').value || '').toLowerCase().trim();
+  const folder = document.getElementById('folder-filter').value;
+  let filtered = allNotes.filter(n => {
+    if (folder && n.folder !== folder) return false;
+    if (currentTab === 'favoritos' && !favorites[n.path]) return false;
+    if (!q) return true;
+    return (n.title || '').toLowerCase().includes(q)
+        || (n.snippet || '').toLowerCase().includes(q);
+  });
+  if (currentTab === 'recientes') {
+    filtered = filtered.slice(0, 30);
+  } else {
+    if (currentSort === 'mtime') filtered.sort((a, b) => b.mtime - a.mtime);
+    else if (currentSort === 'title') filtered.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+    else if (currentSort === 'folder') filtered.sort((a, b) => (a.folder || '').localeCompare(b.folder || ''));
+  }
+  renderNotes(filtered);
+}
+
+function escapeHtml(s) {
+  return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function renderNotes(notes) {
+  const grid = document.getElementById('grid');
+  if (notes.length === 0) {
+    grid.innerHTML = '<div class="empty">No se encontraron notas</div>';
+    return;
+  }
+  const limit = currentTab === 'recientes' ? 30 : 200;
+  grid.innerHTML = notes.slice(0, limit).map((n) => {
+    const idx = allNotes.indexOf(n);
+    const date = n.mtime ? new Date(n.mtime * 1000).toLocaleDateString('es-ES') : '';
+    const isFav = favorites[n.path] ? 'on' : '';
+    return '<div class="card" onclick="openReader(' + idx + ')">'
+      + '<button class="card-fav ' + isFav + '" onclick="event.stopPropagation();toggleFav(\'' + n.path.replace(/\\/g, '\\\\').replace(/'/g, "\\'") + '\', this)">*</button>'
+      + '<div class="card-folder">' + escapeHtml(n.folder || 'Raiz') + '</div>'
+      + '<div class="card-title">' + escapeHtml(n.title) + '</div>'
+      + '<div class="card-snippet">' + escapeHtml((n.snippet || '').substring(0, 120)) + '</div>'
+      + '<div class="card-date">' + date + '</div>'
+      + '</div>';
+  }).join('');
+  if (notes.length > limit) {
+    grid.innerHTML += '<div class="empty">Mostrando ' + limit + ' de ' + notes.length + '</div>';
+  }
+}
+
+function toggleFav(path, btn) {
+  if (favorites[path]) delete favorites[path];
+  else favorites[path] = true;
+  saveFavs();
+  btn.classList.toggle('on');
+  if (currentTab === 'favoritos') filterNotes();
+}
+
+// === LECTOR CON WIKILINKS CLICABLES ===
+let titleMap = {};
+function buildTitleMap() {
+  titleMap = {};
+  for (let i = 0; i < allNotes.length; i++) {
+    const t = allNotes[i].title || '';
+    if (t) titleMap[t.toLowerCase()] = i;
+  }
+}
+
+function openReader(idx) {
+  const note = allNotes[idx];
+  if (!note) return;
+  currentNote = note;
+  document.getElementById('reader-title').innerText = note.title || 'Nota';
+  const content = note.content || '(Nota vacia)';
+  let html;
+  try {
+    html = (typeof marked !== 'undefined') ? marked.parse(content) : '<pre>' + escapeHtml(content) + '</pre>';
+  } catch (e) {
+    html = '<pre>' + escapeHtml(content) + '</pre>';
+  }
+  // Post-procesar wikilinks [[X]] o [[X|alias]]
+  html = html.replace(/\[\[([^\]|#]+?)(?:[|#]([^\]]+))?\]\]/g, function(match, target, alias) {
+    const display = alias || target;
+    const key = target.trim().toLowerCase();
+    if (titleMap[key] !== undefined) {
+      return '<a class="wikilink" onclick="openReader(' + titleMap[key] + ')">' + escapeHtml(display) + '</a>';
+    }
+    return '<span class="wikilink" style="opacity:.6">' + escapeHtml(display) + '</span>';
+  });
+  document.getElementById('reader-body').innerHTML = html;
+  // Link Obsidian
+  const obsidianUrl = 'obsidian://open?vault=' + encodeURIComponent(vaultName) + '&file=' + encodeURIComponent(note.path);
+  const androidIntent = 'intent://open?vault=' + encodeURIComponent(vaultName) + '&file=' + encodeURIComponent(note.path) + '#Intent;scheme=obsidian;package=md.obsidian;end';
+  const link = document.getElementById('reader-obsidian-link');
+  link.href = androidIntent;
+  link.onclick = function(e) {
+    e.preventDefault();
+    try { window.location.href = androidIntent; }
+    catch (err) { window.location.href = obsidianUrl; }
+  };
+  document.getElementById('reader').classList.add('show');
+  document.getElementById('reader-body').scrollTop = 0;
+}
+
+function closeReader() {
+  document.getElementById('reader').classList.remove('show');
+  currentNote = null;
+}
+
+// === CREAR NOTA ===
+function openModalCrear() {
+  document.getElementById('nueva-title').value = '';
+  document.getElementById('nueva-content').value = '';
+  document.getElementById('nueva-tipo').value = 'concepto';
+  document.getElementById('modal-crear').classList.add('show');
+}
+
+function closeModalCrear() {
+  document.getElementById('modal-crear').classList.remove('show');
+}
+
+function crearNota() {
+  if (!tg) { alert('Abre desde Telegram'); return; }
+  const title = document.getElementById('nueva-title').value.trim();
+  const content = document.getElementById('nueva-content').value.trim();
+  const tipo = document.getElementById('nueva-tipo').value;
+  if (!title) { alert('Falta el titulo'); return; }
+  const payload = {
+    action: 'nota_create',
+    title: title,
+    content: content || title,
+    tipo: tipo
+  };
+  tg.sendData(JSON.stringify(payload));
+  tg.close();
+}
+
+// === APPEND A NOTA EXISTENTE ===
+function openAppendModal() {
+  if (!currentNote) return;
+  document.getElementById('append-content').value = '';
+  document.getElementById('modal-append').classList.add('show');
+}
+
+function closeAppendModal() {
+  document.getElementById('modal-append').classList.remove('show');
+}
+
+function enviarAppend() {
+  if (!tg) { alert('Abre desde Telegram'); return; }
+  const content = document.getElementById('append-content').value.trim();
+  if (!content) { alert('Escribe algo'); return; }
+  if (!currentNote) { alert('No hay nota abierta'); return; }
+  const payload = {
+    action: 'nota_append',
+    path: currentNote.path,
+    content: content
+  };
+  tg.sendData(JSON.stringify(payload));
+  tg.close();
+}
+
+// === PULL TO REFRESH ===
+let touchStartY = 0;
+const grid = document.getElementById('grid');
+document.addEventListener('touchstart', e => {
+  if (grid.scrollTop === 0) touchStartY = e.touches[0].clientY;
+}, { passive: true });
+document.addEventListener('touchend', e => {
+  const delta = e.changedTouches[0].clientY - touchStartY;
+  if (delta > 120 && grid.scrollTop === 0) {
+    console.log('Pull-to-refresh activado');
+    loadNotes();
+  }
+}, { passive: true });
+
+// === NOTA -> KANBAN ===
+let kanbanBoards = ['default'];
+async function loadKanbanBoards() {
+  try {
+    const r = await fetch('kanban.json?t=' + Date.now());
+    const d = await r.json();
+    kanbanBoards = d._boards || ['default'];
+  } catch(e) { kanbanBoards = ['default']; }
+}
+function openKanbanModal() {
+  if (!currentNote) return;
+  const sel = document.getElementById('kanban-board');
+  sel.innerHTML = '';
+  kanbanBoards.forEach(b => {
+    const o = document.createElement('option');
+    o.value = b; o.text = b;
+    sel.appendChild(o);
+  });
+  document.getElementById('kanban-priority').value = 'normal';
+  document.getElementById('modal-kanban').classList.add('show');
+}
+function closeKanbanModal() {
+  document.getElementById('modal-kanban').classList.remove('show');
+}
+function enviarKanban() {
+  if (!tg) { alert('Abre desde Telegram'); return; }
+  if (!currentNote) { alert('No hay nota abierta'); return; }
+  const board = document.getElementById('kanban-board').value;
+  const priority = document.getElementById('kanban-priority').value;
+  const payload = {
+    action: 'nota_to_kanban',
+    title: currentNote.title,
+    path: currentNote.path,
+    board: board,
+    priority: priority
+  };
+  tg.sendData(JSON.stringify(payload));
+  tg.close();
+}
+
+// === INICIO ===
+loadKanbanBoards();
+loadNotes().then(() => buildTitleMap());
+
+// Reconstruir titleMap cuando carguen las notas
+const origLoadNotes = loadNotes;
+window.loadNotes = async function() {
+  await origLoadNotes();
+  buildTitleMap();
+};
+</script>
+
+<div class="modal-crear" id="modal-kanban">
+  <div class="reader-header">
+    <button class="btn-close" onclick="closeKanbanModal()">X</button>
+    <div class="reader-title">Enviar a Kanban</div>
+    <div style="width:36px"></div>
+  </div>
+  <div class="modal-body">
+    <label>Tablero</label>
+    <select id="kanban-board"></select>
+    <label>Prioridad</label>
+    <select id="kanban-priority">
+      <option value="normal">Normal</option>
+      <option value="high">Alta</option>
+      <option value="low">Baja</option>
+    </select>
+    <button class="btn-obsidian" onclick="enviarKanban()" style="padding:14px;">Crear tarea en Kanban</button>
+  </div>
+</div>
+</body>
+</html>
