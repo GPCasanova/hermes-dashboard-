@@ -32,6 +32,7 @@ select{background:var(--surface);color:var(--text);border:1px solid var(--border
 .task-card.overdue{border-color:var(--red)}
 .task-title{font-size:.9rem;font-weight:600;line-height:1.3}
 .task-meta{display:flex;justify-content:space-between;align-items:center;font-size:.7rem;color:var(--muted);gap:6px;flex-wrap:wrap}
+.badge-board{background:var(--accent);color:white;padding:1px 5px;border-radius:4px;font-size:0.6rem;font-weight:600;text-transform:uppercase;margin-right:4px}
 .task-id{font-family:monospace;background:#000;padding:1px 5px;border-radius:3px}
 .task-date{font-size:.65rem;padding:2px 6px;background:rgba(255,255,255,.05);border-radius:4px}
 .task-date.overdue{color:var(--red);font-weight:600}
@@ -268,31 +269,42 @@ function setView(v) {
 function renderBoard() {
   const board = document.getElementById('board-select').value;
   const c = document.getElementById('board-container');
+  const selector = document.getElementById('board-select');
   c.innerHTML = '';
-  if (!board) return;
-  const tasks = kanbanData[board] || [];
+  
   if (currentView === 'status') {
+    selector.style.display = 'block';
+    if (!board) return;
+    const tasks = kanbanData[board] || [];
     COLUMNS_STATUS.forEach(col => {
       const filtered = tasks.filter(t => col.statuses.includes((t.status||'').toLowerCase()));
       c.innerHTML += renderCol(col.label, filtered, board, col.color, false);
     });
   } else {
+    selector.style.display = 'none'; // Ocultar selector en vista global
     const today = getTodayStr();
     const g = { atrasadas: [], hoy: [], programadas: [], sinfecha: [], completadas: [] };
-    tasks.forEach(t => {
-      const st = (t.status || '').toLowerCase();
-      if (st === 'done' || st === 'archived') { g.completadas.push(t); return; }
-      const due = t.due_date;
-      if (!due) { g.sinfecha.push(t); return; }
-      if (due < today) g.atrasadas.push(t);
-      else if (due === today) g.hoy.push(t);
-      else g.programadas.push(t);
+    
+    // Recopilar tareas de TODOS los tableros
+    boards.forEach(b => {
+      const tasks = kanbanData[b] || [];
+      tasks.forEach(t => {
+        t._originBoard = b; // Etiquetar origen
+        const st = (t.status || '').toLowerCase();
+        if (st === 'done' || st === 'archived') { g.completadas.push(t); return; }
+        const due = t.due_date;
+        if (!due) { g.sinfecha.push(t); return; }
+        if (due < today) g.atrasadas.push(t);
+        else if (due === today) g.hoy.push(t);
+        else g.programadas.push(t);
+      });
     });
-    c.innerHTML += renderCol('Atrasadas', g.atrasadas, board, 'red', true);
-    c.innerHTML += renderCol('Hoy', g.hoy, board, 'yellow', true);
-    c.innerHTML += renderCol('Programadas', g.programadas, board, 'green', true);
-    c.innerHTML += renderCol('Sin fecha', g.sinfecha, board, 'gray', true);
-    c.innerHTML += renderCol('Completadas', g.completadas, board, '', true);
+    
+    c.innerHTML += renderCol('Atrasadas', g.atrasadas, null, 'red', true);
+    c.innerHTML += renderCol('Hoy', g.hoy, null, 'yellow', true);
+    c.innerHTML += renderCol('Programadas', g.programadas, null, 'green', true);
+    c.innerHTML += renderCol('Sin fecha', g.sinfecha, null, 'gray', true);
+    c.innerHTML += renderCol('Completadas', g.completadas, null, '', true);
   }
 }
 
@@ -306,21 +318,28 @@ function renderCol(label, tasks, board, color, showDate) {
 function renderCard(t, board, showDate) {
   const titleSafe = (t.title || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
   const today = getTodayStr();
+  const originB = t._originBoard || board; // Tablero de origen
   const overdue = t.due_date && t.due_date < today && !['done','archived'].includes((t.status||'').toLowerCase());
+  
   let h = '<div class="task-card' + (overdue ? ' overdue' : '') + '">';
   h += '<div class="task-title">' + t.title + '</div>';
   h += '<div class="task-meta"><span class="task-id">' + t.id + '</span>';
-  if (showDate && t.due_date) {
-    h += '<span class="task-date' + (overdue ? ' overdue' : ' set') + '">' + t.due_date + (overdue ? ' (!)' : '') + '</span>';
+  
+  if (showDate) {
+    h += '<span>';
+    if (originB) h += '<span class="badge-board">' + originB + '</span>';
+    if (t.due_date) h += ' <span class="task-date' + (overdue ? ' overdue' : ' set') + '">' + t.due_date + (overdue ? ' (!)' : '') + '</span>';
+    h += '</span>';
   } else {
     h += '<span class="status-badge ' + t.status + '">' + t.status + '</span>';
   }
+  
   h += '</div>';
   h += '<div class="task-actions">';
-  h += '<button class="btn-act ok" onclick="completar(\'' + t.id + '\',\'' + board + '\')">OK</button>';
-  h += '<button class="btn-act block" onclick="abrirBloquear(\'' + t.id + '\',\'' + board + '\',\'' + titleSafe + '\')">BLK</button>';
-  h += '<button class="btn-act unblock" onclick="desbloquear(\'' + t.id + '\',\'' + board + '\')">UNB</button>';
-  h += '<button class="btn-act date" onclick="abrirFecha(\'' + t.id + '\',\'' + board + '\',\'' + titleSafe + '\')">DATE</button>';
+  h += '<button class="btn-act ok" onclick="completar(\'' + t.id + '\',\'' + originB + '\')">OK</button>';
+  h += '<button class="btn-act block" onclick="abrirBloquear(\'' + t.id + '\',\'' + originB + '\',\'' + titleSafe + '\')">BLK</button>';
+  h += '<button class="btn-act unblock" onclick="desbloquear(\'' + t.id + '\',\'' + originB + '\')">UNB</button>';
+  h += '<button class="btn-act date" onclick="abrirFecha(\'' + t.id + '\',\'' + originB + '\',\'' + titleSafe + '\')">DATE</button>';
   h += '</div></div>';
   return h;
 }
