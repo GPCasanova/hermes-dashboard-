@@ -1,11 +1,55 @@
 {
   "_boards": [
-    "default"
+    "default",
+    "cambio-categoria",
+    "publicaciones",
+    "tesis-doctoral"
   ],
   "_projects": [
     "cambio-de-categoria-a-auxiliar",
     "publicaci-n-cient-fica",
     "doctorado"
   ],
-  "default": []
+  "default": [],
+  "cambio-categoria": [
+    {
+      "id": "t_21b74dbc",
+      "status": "done",
+      "assignee": "unassigned",
+      "title": "Completar curriculum vitae"
+    },
+    {
+      "id": "t_738785d8",
+      "status": "blocked",
+      "assignee": "unassigned",
+      "title": "Imprimir modelo de filosofía"
+    },
+    {
+      "id": "t_30cfb911",
+      "status": "ready",
+      "assignee": "unassigned",
+      "title": "Comprar hojas"
+    }
+  ],
+  "publicaciones": [
+    {
+      "id": "t_194fac0b",
+      "status": "ready",
+      "assignee": "unassigned",
+      "title": "Revisiones Bibliográficas"
+    },
+    {
+      "id": "t_6317eee6",
+      "status": "blocked",
+      "assignee": "unassigned",
+      "title": "Elaborar informe"
+    },
+    {
+      "id": "t_c2a2ba8d",
+      "status": "ready",
+      "assignee": "unassigned",
+      "title": "Buscar bibliografias 2026"
+    }
+  ],
+  "tesis-doctoral": []
 }
