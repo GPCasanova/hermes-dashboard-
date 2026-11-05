@@ -85,6 +85,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
     <button class="btn-close" onclick="closeReader()">X</button>
     <div class="reader-title" id="reader-title">Nota</div>
     <button class="btn-secondary" onclick="openAppendModal()">+ Anadir</button>
+    <button class="btn-secondary" onclick="openKanbanModal()">-> Kanban</button>
     <a href="#" class="btn-obsidian" id="reader-obsidian-link">Obsidian</a>
   </div>
   <div class="reader-body" id="reader-body"></div>
@@ -355,7 +356,48 @@ document.addEventListener('touchend', e => {
   }
 }, { passive: true });
 
+// === NOTA -> KANBAN ===
+let kanbanBoards = ['default'];
+async function loadKanbanBoards() {
+  try {
+    const r = await fetch('kanban.json?t=' + Date.now());
+    const d = await r.json();
+    kanbanBoards = d._boards || ['default'];
+  } catch(e) { kanbanBoards = ['default']; }
+}
+function openKanbanModal() {
+  if (!currentNote) return;
+  const sel = document.getElementById('kanban-board');
+  sel.innerHTML = '';
+  kanbanBoards.forEach(b => {
+    const o = document.createElement('option');
+    o.value = b; o.text = b;
+    sel.appendChild(o);
+  });
+  document.getElementById('kanban-priority').value = 'normal';
+  document.getElementById('modal-kanban').classList.add('show');
+}
+function closeKanbanModal() {
+  document.getElementById('modal-kanban').classList.remove('show');
+}
+function enviarKanban() {
+  if (!tg) { alert('Abre desde Telegram'); return; }
+  if (!currentNote) { alert('No hay nota abierta'); return; }
+  const board = document.getElementById('kanban-board').value;
+  const priority = document.getElementById('kanban-priority').value;
+  const payload = {
+    action: 'nota_to_kanban',
+    title: currentNote.title,
+    path: currentNote.path,
+    board: board,
+    priority: priority
+  };
+  tg.sendData(JSON.stringify(payload));
+  tg.close();
+}
+
 // === INICIO ===
+loadKanbanBoards();
 loadNotes().then(() => buildTitleMap());
 
 // Reconstruir titleMap cuando carguen las notas
@@ -365,5 +407,24 @@ window.loadNotes = async function() {
   buildTitleMap();
 };
 </script>
+
+<div class="modal-crear" id="modal-kanban">
+  <div class="reader-header">
+    <button class="btn-close" onclick="closeKanbanModal()">X</button>
+    <div class="reader-title">Enviar a Kanban</div>
+    <div style="width:36px"></div>
+  </div>
+  <div class="modal-body">
+    <label>Tablero</label>
+    <select id="kanban-board"></select>
+    <label>Prioridad</label>
+    <select id="kanban-priority">
+      <option value="normal">Normal</option>
+      <option value="high">Alta</option>
+      <option value="low">Baja</option>
+    </select>
+    <button class="btn-obsidian" onclick="enviarKanban()" style="padding:14px;">Crear tarea en Kanban</button>
+  </div>
+</div>
 </body>
 </html>
