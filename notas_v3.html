@@ -238,10 +238,13 @@ function toggleFav(path, btn) {
 }
 
 // === LECTOR CON WIKILINKS CLICABLES ===
-const titleMap = {};
+let titleMap = {};
 function buildTitleMap() {
   titleMap = {};
-  allNotes.forEach(n => { titleMap[n.title.toLowerCase()] = allNotes.indexOf(n); });
+  for (let i = 0; i < allNotes.length; i++) {
+    const t = allNotes[i].title || '';
+    if (t) titleMap[t.toLowerCase()] = i;
+  }
 }
 
 function openReader(idx) {
