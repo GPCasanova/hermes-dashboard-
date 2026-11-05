@@ -360,7 +360,7 @@ function enviar(tipo) {
   } else if (tipo === 'fecha') {
     const d = document.getElementById('fecha-due').value;
     if (!d) { alert('Falta fecha'); return; }
-    p = { action: 'kanban_set_due', task_id: fechaTarget.id, due_date: d };
+    p = { action: 'kanban_set_due', task_id: fechaTarget.id, due_date: d, board: fechaTarget.board };
   }
   if (!p) return;
   tg.sendData(JSON.stringify(p));
