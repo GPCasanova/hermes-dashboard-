@@ -1,7 +1,7 @@
 {
-  "timestamp": 1793913306,
-  "ram": {"free": 697, "total": 3653},
-  "vpn": {"ip": "172.236.180.87", "country": "IN"},
+  "timestamp": 1793913605,
+  "ram": {"free": 574, "total": 3653},
+  "vpn": {"ip": "0.0.0.0", "country": "?"},
   "gateway": {"pid": "", "uptime": ""},
   "crons": {"active": 16},
   "inbox": {"count": 3},
