@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Hermes Notas</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+:root{--bg:#0f172a;--surface:#1e293b;--text:#f8fafc;--muted:#94a3b8;--accent:#8b5cf6;--border:#334155;--green:#10b981}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;height:100vh;overflow:hidden}
+header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:10px;background:rgba(15,23,42,.95);z-index:10}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+h1{font-size:1.1rem;font-weight:700}
+.search-box{width:100%;display:flex;gap:8px}
+input,select{width:100%;background:var(--surface);color:var(--text);border:1px solid var(--border);padding:10px;border-radius:8px;font-size:.9rem;outline:none;font-family:inherit}
+input:focus,select:focus{border-color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:14px;overflow-y:auto;flex:1}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px;cursor:pointer;transition:0.2s}
+.card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.card-title{font-size:.9rem;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-folder{font-size:.65rem;color:var(--accent);text-transform:uppercase;font-weight:600;background:rgba(139,92,246,.1);padding:2px 6px;border-radius:4px;align-self:flex-start;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card-snippet{font-size:.75rem;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-date{font-size:.6rem;color:var(--muted);margin-top:auto;text-align:right}
+.empty{text-align:center;color:var(--muted);grid-column:1/-1;padding:40px}
+.reader{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:200;display:none;flex-direction:column}
+.reader.show{display:flex}
+.reader-header{padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px}
+.reader-title{font-weight:600;font-size:1rem;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.btn-close{background:transparent;border:none;color:var(--muted);font-size:1.5rem;cursor:pointer;padding:0 8px}
+.btn-obsidian{background:var(--accent);color:white;border:none;padding:8px 12px;border-radius:8px;font-size:.8rem;font-weight:600;cursor:pointer;white-space:nowrap;text-decoration:none}
+.reader-body{flex:1;overflow-y:auto;padding:16px;font-size:1rem;line-height:1.6;max-width:800px;margin:0 auto;width:100%}
+.reader-body h1,.reader-body h2,.reader-body h3{margin-top:1.5em;margin-bottom:.5em;color:var(--accent)}
+.reader-body p{margin-bottom:1em}
+.reader-body a{color:#60a5fa;text-decoration:none}
+.reader-body code{background:#000;padding:2px 6px;border-radius:4px;font-family:monospace}
+.reader-body pre{background:#000;padding:10px;border-radius:8px;overflow-x:auto;margin-bottom:1em}
+.reader-body blockquote{border-left:4px solid var(--accent);padding-left:10px;color:var(--muted);margin-bottom:1em}
+</style>
+</head>
+<body>
+<header>
+  <div class="row">
+    <h1>Hermes Notas</h1>
+    <button class="btn-obsidian" onclick="openModalCrear()">+ Nota</button>
+  </div>
+  <div class="search-box">
+    <input type="text" id="search" placeholder="Buscar en notas..." oninput="filterNotes()">
+    <select id="folder-filter" onchange="filterNotes()">
+      <option value="">Todas las carpetas</option>
+    </select>
+  </div>
+</header>
+
+<div class="grid" id="grid"></div>
+
+<!-- Lector de Notas -->
+<div class="reader" id="reader">
+  <div class="reader-header">
+    <button class="btn-close" onclick="closeReader()">✕</button>
+    <div class="reader-title" id="reader-title">Nota</div>
+    <a href="#" class="btn-obsidian" id="reader-obsidian-link">Editar en Obsidian</a>
+  </div>
+  <div class="reader-body" id="reader-body"></div>
+</div>
+
+<!-- Modal Nueva Nota -->
+<div class="reader" id="modal-crear">
+  <div class="reader-header">
+    <button class="btn-close" onclick="closeModalCrear()">✕</button>
+    <div class="reader-title">Nueva Nota</div>
+    <div style="width:40px"></div>
+  </div>
+  <div style="padding:16px; display:flex; flex-direction:column; gap:12px;">
+    <label style="font-size:.8rem; color:var(--muted);">Título</label>
+    <input type="text" id="nueva-title" placeholder="Ej: Ideas para proyecto">
+    <label style="font-size:.8rem; color:var(--muted);">Contenido</label>
+    <textarea id="nueva-content" placeholder="Escribe aquí..." style="height:200px; resize:none;"></textarea>
+    <button class="btn-obsidian" onclick="crearNota()" style="padding:14px;">Guardar en INBOX</button>
+  </div>
+</div>
+<script>
+const tg = window.Telegram?.WebApp;
+if (tg) tg.expand();
+
+let allNotes = [];
+const vaultName = "CDGePeCa";
+
+async function loadNotes() {
+  try {
+    const r = await fetch('vault.json?t=' + Date.now());
+    allNotes = await r.json();
+    populateFolders();
+    renderNotes(allNotes);
+  } catch (e) {
+    document.getElementById('grid').innerHTML = '<div class="empty">Error al cargar notas</div>';
+  }
+}
+
+function populateFolders() {
+  const folders = [...new Set(allNotes.map(n => n.folder))].sort();
+  const sel = document.getElementById('folder-filter');
+  folders.forEach(f => {
+    const o = document.createElement('option');
+    o.value = f;
+    o.text = f;
+    sel.appendChild(o);
+  });
+}
+
+function filterNotes() {
+  const q = (document.getElementById('search').value || '').toLowerCase().trim();
+  const folder = document.getElementById('folder-filter').value;
+  const filtered = allNotes.filter(n => {
+    if (folder && n.folder !== folder) return false;
+    if (!q) return true;
+    return (n.title || '').toLowerCase().includes(q)
+        || (n.snippet || '').toLowerCase().includes(q);
+  });
+  renderNotes(filtered);
+}
+
+function renderNotes(notes) {
+  const grid = document.getElementById('grid');
+  if (notes.length === 0) {
+    grid.innerHTML = '<div class="empty">No se encontraron notas</div>';
+    return;
+  }
+  grid.innerHTML = notes.slice(0, 200).map((n, idx) => {
+    const date = n.mtime ? new Date(n.mtime * 1000).toLocaleDateString('es-ES') : '';
+    return '<div class="card" onclick="openReader(' + allNotes.indexOf(n) + ')">'
+      + '<div class="card-folder">' + escapeHtml(n.folder || 'Raiz') + '</div>'
+      + '<div class="card-title">' + escapeHtml(n.title) + '</div>'
+      + '<div class="card-snippet">' + escapeHtml((n.snippet || '').substring(0, 120)) + '</div>'
+      + '<div class="card-date">' + date + '</div>'
+      + '</div>';
+  }).join('');
+  if (notes.length > 200) {
+    grid.innerHTML += '<div class="empty">Mostrando 200 de ' + notes.length + ' notas. Usa el buscador.</div>';
+  }
+}
+
+function escapeHtml(s) {
+  return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function openReader(idx) {
+  const note = allNotes[idx];
+  if (!note) return;
+  document.getElementById('reader-title').innerText = note.title || 'Nota';
+  const content = note.content || '(Nota vacia)';
+  let html;
+  try {
+    html = (typeof marked !== 'undefined') ? marked.parse(content) : '<pre>' + escapeHtml(content) + '</pre>';
+  } catch (e) {
+    html = '<pre>' + escapeHtml(content) + '</pre>';
+  }
+  document.getElementById('reader-body').innerHTML = html;
+  // Link de Obsidian con intent:// (funciona en Android desde Telegram)
+  const obsidianUrl = 'obsidian://open?vault=' + encodeURIComponent(vaultName) + '&file=' + encodeURIComponent(note.path);
+  const androidIntent = 'intent://open?vault=' + encodeURIComponent(vaultName) + '&file=' + encodeURIComponent(note.path) + '#Intent;scheme=obsidian;package=md.obsidian;end';
+  const link = document.getElementById('reader-obsidian-link');
+  link.href = androidIntent;
+  link.onclick = function(e) {
+    e.preventDefault();
+    try { window.location.href = androidIntent; }
+    catch (err) { window.location.href = obsidianUrl; }
+  };
+  document.getElementById('reader').classList.add('show');
+}
+
+function closeReader() {
+  document.getElementById('reader').classList.remove('show');
+}
+
+function openModalCrear() {
+  document.getElementById('nueva-title').value = '';
+  document.getElementById('nueva-content').value = '';
+  document.getElementById('modal-crear').classList.add('show');
+}
+
+function closeModalCrear() {
+  document.getElementById('modal-crear').classList.remove('show');
+}
+
+function crearNota() {
+  if (!tg) { alert('Abre desde Telegram'); return; }
+  const title = document.getElementById('nueva-title').value.trim();
+  const content = document.getElementById('nueva-content').value.trim();
+  if (!title) { alert('Falta el titulo'); return; }
+  const payload = {
+    action: 'nota_create',
+    title: title,
+    content: content || title
+  };
+  tg.sendData(JSON.stringify(payload));
+  tg.close();
+}
+
+loadNotes();
+</script>
+</body>
+</html>
