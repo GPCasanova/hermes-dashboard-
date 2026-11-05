@@ -48,6 +48,17 @@
   ],
   "publicaciones": [
     {
+      "id": "t_21f0ee3c",
+      "status": "ready",
+      "assignee": "unassigned",
+      "title": "Estado del Arte",
+      "priority": 2,
+      "created_at": 1793915086,
+      "started_at": null,
+      "completed_at": null,
+      "due_date": null
+    },
+    {
       "id": "t_194fac0b",
       "status": "scheduled",
       "assignee": "unassigned",
