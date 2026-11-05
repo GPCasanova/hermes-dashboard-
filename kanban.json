@@ -71,14 +71,14 @@
     },
     {
       "id": "t_c2a2ba8d",
-      "status": "ready",
+      "status": "scheduled",
       "assignee": "unassigned",
       "title": "Buscar bibliografias 2026",
       "priority": 0,
       "created_at": 1793812342,
       "started_at": null,
       "completed_at": null,
-      "due_date": null
+      "due_date": "2026-11-05"
     }
   ],
   "tesis-doctoral": []
