@@ -451,6 +451,19 @@
     "path": "TaskNotes/Tasks/Crear fondo de inversión de 100mil CUP.md"
   },
   {
+    "title": "Estado del Arte",
+    "status": "open",
+    "priority": "normal",
+    "due": "None",
+    "area": "None",
+    "tags": [
+      "task"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Tasks/Estado del Arte.md"
+  },
+  {
     "title": "Instalar sistema de gestión financiera",
     "status": "open",
     "priority": "normal",
