@@ -11,41 +11,7 @@
     "doctorado"
   ],
   "default": [],
-  "cambio-categoria": [
-    {
-      "id": "t_21b74dbc",
-      "status": "done",
-      "assignee": "unassigned",
-      "title": "Completar curriculum vitae",
-      "priority": 1,
-      "created_at": 1793815469,
-      "started_at": null,
-      "completed_at": 1793823632,
-      "due_date": null
-    },
-    {
-      "id": "t_738785d8",
-      "status": "scheduled",
-      "assignee": "unassigned",
-      "title": "Imprimir modelo de filosofía",
-      "priority": 1,
-      "created_at": 1793816231,
-      "started_at": null,
-      "completed_at": null,
-      "due_date": "2026-11-06"
-    },
-    {
-      "id": "t_30cfb911",
-      "status": "ready",
-      "assignee": "unassigned",
-      "title": "Comprar hojas",
-      "priority": 1,
-      "created_at": 1793823727,
-      "started_at": null,
-      "completed_at": null,
-      "due_date": "2026-11-07"
-    }
-  ],
+  "cambio-categoria": [],
   "publicaciones": [
     {
       "id": "t_21f0ee3c",
