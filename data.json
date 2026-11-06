@@ -1,8 +1,17 @@
 {
-  "timestamp": 1793931606,
-  "ram": {"free": 729, "total": 3653},
-  "vpn": {"ip": "139.59.70.2", "country": "IN"},
-  "gateway": {"pid": "29160", "uptime": "01:31:35"},
+  "timestamp": 1793931904,
+  "ram": {"free": 528, "total": 3653},
+  "vpn": {"ip": "152.206.210.31", "country": "
+<html><head>
+<meta http-equiv="content-type" content="text/html;charset=utf-8">
+<title>403 Forbidden</title>
+</head>
+<body text=#000000 bgcolor=#ffffff>
+<h1>Error: Forbidden</h1>
+<h2>Your client does not have permission to get URL <code>/152.206.210.31/country</code> from this server.</h2>
+<h2></h2>
+</body></html>"},
+  "gateway": {"pid": "29160", "uptime": "01:36:34"},
   "crons": {"active": 16},
   "inbox": {"count": 3},
   "gbrain": {"last_sync": 1793875016}
