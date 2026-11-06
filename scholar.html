@@ -108,25 +108,45 @@
             const results = document.getElementById("results");
             document.getElementById("count").textContent = papers.length + " papers";
             if (!papers.length) { results.innerHTML = '<div class="empty-state">Sin resultados.</div>'; return; }
-
+            window._papersById = {};
+            papers.forEach(p => { window._papersById[p.id] = p; });
             results.innerHTML = papers.map(p => {
                 const title = p.display_name || "Sin título";
                 const year = p.publication_year || "—";
                 const cites = p.cited_by_count || 0;
-                const authors = (p.authorships || []).slice(0, 3).map(a => a.author?.display_name).filter(Boolean).join(", ") + ((p.authorships || []).length > 3 ? " et al." : "");
+                const authors = (p.authorships || []).map(a => a.author?.display_name).filter(Boolean).join(", ");
                 const venue = p.primary_location?.source?.display_name || "";
                 const doi = p.doi || "";
                 const abstract = reconstructAbstract(p.abstract_inverted_index).slice(0, 400);
+                const safeId = p.id.replace(/[^a-z0-9]/gi,'');
                 return `<div class="paper-card">
                     <div class="paper-title">${title}</div>
                     <div class="paper-meta">${authors} · ${year} · ${venue} · ${cites} citas</div>
-                    ${abstract ? `<div class="paper-abstract" id="abs-${p.id.replace(/[^a-z0-9]/gi,'')}">${abstract}...</div>` : ""}
+                    ${abstract ? `<div class="paper-abstract" id="abs-${safeId}">${abstract}...</div>` : ""}
                     <div class="paper-actions">
-                        ${abstract ? `<button class="btn-expand" onclick="document.getElementById('abs-${p.id.replace(/[^a-z0-9]/gi,'')}').classList.toggle('expanded')">Ver más</button>` : ""}
-                        <button class="btn-save" disabled title="Fase 2: guardar en Obsidian">📥 Guardar (pronto)</button>
+                        ${abstract ? `<button class="btn-expand" onclick="document.getElementById('abs-${safeId}').classList.toggle('expanded')">Ver más</button>` : ""}
+                        <button class="btn-save" onclick="guardarPaper('${p.id}')">📥 Guardar</button>
                     </div>
                 </div>`;
             }).join("");
+        }
+        function guardarPaper(paperId) {
+            const p = (window._papersById || {})[paperId];
+            if (!p) { alert("Error: paper no encontrado"); return; }
+            const authors = (p.authorships || []).map(a => a.author?.display_name).filter(Boolean).join(", ");
+            const venue = p.primary_location?.source?.display_name || "";
+            const abstract = reconstructAbstract(p.abstract_inverted_index);
+            const payload = {
+                action: "scholar_to_note",
+                title: p.display_name || "Sin título",
+                authors: authors,
+                year: p.publication_year || "",
+                venue: venue,
+                doi: p.doi || "",
+                abstract: abstract
+            };
+            if (tg && tg.sendData) tg.sendData(JSON.stringify(payload));
+            else alert("Abre desde Telegram para usar esta función");
         }
     </script>
 </body>
