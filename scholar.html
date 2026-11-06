@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hermes Scholar</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root { --bg: #0f172a; --surface: #1e293b; --text: #f8fafc; --text-muted: #94a3b8; --accent: #10b981; --border: #334155; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        header { position: sticky; top: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); z-index: 100; border-bottom: 1px solid var(--border); padding: 16px; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; max-width: 800px; margin: 0 auto 12px; }
+        h1 { font-size: 1.25rem; font-weight: 700; }
+        .badge-count { font-size: 0.75rem; background: var(--surface); border: 1px solid var(--border); padding: 4px 10px; border-radius: 20px; color: var(--text-muted); }
+        .search-row { display: flex; gap: 8px; max-width: 800px; margin: 0 auto; }
+        .search-row input { flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 10px 16px; border-radius: 10px; font-size: 0.95rem; outline: none; }
+        .search-row button { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; }
+        .filters { display: flex; gap: 8px; max-width: 800px; margin: 12px auto 0; overflow-x: auto; }
+        .filter-chip { background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; white-space: nowrap; }
+        .filter-chip.active { background: var(--accent); color: white; border-color: var(--accent); }
+        .container { max-width: 800px; margin: 0 auto; padding: 16px; }
+        .paper-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+        .paper-title { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 6px; line-height: 1.4; }
+        .paper-meta { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; }
+        .paper-abstract { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; max-height: 4.5em; overflow: hidden; transition: max-height 0.3s; }
+        .paper-abstract.expanded { max-height: none; }
+        .paper-actions { display: flex; gap: 8px; margin-top: 12px; }
+        .btn-save { flex: 1; background: var(--accent); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-expand { background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; }
+        .empty-state { text-align: center; color: var(--text-muted); padding: 40px 20px; }
+        .loading { text-align: center; color: var(--text-muted); padding: 40px; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-top">
+            <h1>🔬 Buscador Académico</h1>
+            <div class="badge-count" id="count">—</div>
+        </div>
+        <div class="search-row">
+            <input type="text" id="query" placeholder="Buscar papers, autores, temas..." onkeydown="if(event.key==='Enter')buscar()">
+            <button onclick="buscar()">🔍</button>
+        </div>
+        <div class="filters" id="filters">
+            <span class="filter-chip" data-filter="oa" onclick="toggleFilter(this)">Open Access</span>
+            <span class="filter-chip" data-filter="recent" onclick="toggleFilter(this)">Últimos 5 años</span>
+            <span class="filter-chip" data-filter="cited" onclick="toggleFilter(this)">Más citados</span>
+        </div>
+    </header>
+    <div class="container" id="results">
+        <div class="empty-state">Escribe un tema y pulsa buscar.</div>
+    </div>
+    <script>
+        const tg = window.Telegram.WebApp;
+        if (tg && tg.ready) { tg.ready(); tg.expand(); }
+        const API = "https://api.openalex.org/works";
+        let activeFilters = new Set();
+
+        function toggleFilter(el) {
+            const f = el.dataset.filter;
+            if (activeFilters.has(f)) { activeFilters.delete(f); el.classList.remove("active"); }
+            else { activeFilters.add(f); el.classList.add("active"); }
+        }
+
+        function reconstructAbstract(inv) {
+            if (!inv) return "";
+            const words = [];
+            for (const [word, positions] of Object.entries(inv)) {
+                positions.forEach(p => words[p] = word);
+            }
+            return words.filter(Boolean).join(" ");
+        }
+
+        async function buscar() {
+            const q = document.getElementById("query").value.trim();
+            if (!q) return;
+            const results = document.getElementById("results");
+            results.innerHTML = '<div class="loading">Buscando en OpenAlex...</div>';
+            document.getElementById("count").textContent = "…";
+
+            let filters = [];
+            if (activeFilters.has("oa")) filters.push("is_oa:true");
+            if (activeFilters.has("recent")) filters.push("publication_year:>" + (new Date().getFullYear() - 5));
+            let sort = activeFilters.has("cited") ? "cited_by_count:desc" : "relevance_score:desc";
+
+            const params = new URLSearchParams({
+                search: q,
+                select: "id,doi,display_name,publication_year,cited_by_count,authorships,primary_location,abstract_inverted_index",
+                per_page: "20",
+                sort: sort
+            });
+            if (filters.length) params.set("filter", filters.join(","));
+
+            try {
+                const r = await fetch(API + "?" + params.toString());
+                if (!r.ok) throw new Error("HTTP " + r.status);
+                const data = await r.json();
+                render(data.results || []);
+            } catch (e) {
+                results.innerHTML = '<div class="empty-state">Error: ' + e.message + '</div>';
+                document.getElementById("count").textContent = "error";
+            }
+        }
+
+        function render(papers) {
+            const results = document.getElementById("results");
+            document.getElementById("count").textContent = papers.length + " papers";
+            if (!papers.length) { results.innerHTML = '<div class="empty-state">Sin resultados.</div>'; return; }
+
+            results.innerHTML = papers.map(p => {
+                const title = p.display_name || "Sin título";
+                const year = p.publication_year || "—";
+                const cites = p.cited_by_count || 0;
+                const authors = (p.authorships || []).slice(0, 3).map(a => a.author?.display_name).filter(Boolean).join(", ") + ((p.authorships || []).length > 3 ? " et al." : "");
+                const venue = p.primary_location?.source?.display_name || "";
+                const doi = p.doi || "";
+                const abstract = reconstructAbstract(p.abstract_inverted_index).slice(0, 400);
+                return `<div class="paper-card">
+                    <div class="paper-title">${title}</div>
+                    <div class="paper-meta">${authors} · ${year} · ${venue} · ${cites} citas</div>
+                    ${abstract ? `<div class="paper-abstract" id="abs-${p.id.replace(/[^a-z0-9]/gi,'')}">${abstract}...</div>` : ""}
+                    <div class="paper-actions">
+                        ${abstract ? `<button class="btn-expand" onclick="document.getElementById('abs-${p.id.replace(/[^a-z0-9]/gi,'')}').classList.toggle('expanded')">Ver más</button>` : ""}
+                        <button class="btn-save" disabled title="Fase 2: guardar en Obsidian">📥 Guardar (pronto)</button>
+                    </div>
+                </div>`;
+            }).join("");
+        }
+    </script>
+</body>
+</html>
