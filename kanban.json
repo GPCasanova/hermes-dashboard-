@@ -2,6 +2,10 @@
   "_boards": [
     "default"
   ],
-  "_projects": [],
+  "_projects": [
+    "cambio-de-categoria-a-auxiliar",
+    "publicaci-n-cient-fica",
+    "doctorado"
+  ],
   "default": []
 }
