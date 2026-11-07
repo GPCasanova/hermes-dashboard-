@@ -99,8 +99,7 @@
 
             tasks.forEach(task => {
                 const priorityClass = `p-${task.priority || 'normal'}`;
-                const obsidianUrl = `obsidian://open?vault=CDGePeCa&file=${encodeURIComponent(task.path)}`;
-                const androidIntent = `intent://open?vault=CDGePeCa&file=${encodeURIComponent(task.path)}#Intent;scheme=obsidian;package=md.obsidian;end`;
+                const obsidianUrl = `https://gpcasanova.github.io/hermes-dashboard-/redirect.html?vault=CDGePeCa&file=${encodeURIComponent(task.path)}`;
                 
                 // JS BLINDADO: Evitamos que falle si el área o la fecha vienen vacíos o mal formateados
                 const areaText = task.area ? String(task.area).replace(/\[\[|\]\]/g, '') : '';
@@ -112,7 +111,7 @@
                         ${areaText ? `<span class="task-area">${areaText}</span>` : '<span></span>'}
                         ${dueText ? `<span class="task-due">📅 ${dueText}</span>` : ''}
                     </div>
-                    <button class="btn-open" onclick="abrirObsidian('${androidIntent}', '${obsidianUrl}')">✏️ Editar en Obsidian</button>
+                    <a href="${obsidianUrl}" class="btn-open" onclick="event.preventDefault(); if(tg && tg.openLink){ tg.openLink('${obsidianUrl}'); } else { window.location.href='${obsidianUrl}'; }">✏️ Editar en Obsidian</a>
                 </div>`;
             });
 

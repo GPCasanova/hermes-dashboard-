@@ -271,14 +271,13 @@ function openReader(idx) {
   });
   document.getElementById('reader-body').innerHTML = html;
   // Link Obsidian
-  const obsidianUrl = 'obsidian://open?vault=' + encodeURIComponent(vaultName) + '&file=' + encodeURIComponent(note.path);
-  const androidIntent = 'intent://open?vault=' + encodeURIComponent(vaultName) + '&file=' + encodeURIComponent(note.path) + '#Intent;scheme=obsidian;package=md.obsidian;end';
+  const obsidianUrl = 'https://gpcasanova.github.io/hermes-dashboard-/redirect.html?vault=' + encodeURIComponent(vaultName) + '&file=' + encodeURIComponent(note.path);
   const link = document.getElementById('reader-obsidian-link');
-  link.href = androidIntent;
+  link.href = obsidianUrl;
   link.onclick = function(e) {
     e.preventDefault();
-    try { window.location.href = androidIntent; }
-    catch (err) { window.location.href = obsidianUrl; }
+    if (tg && tg.openLink) { tg.openLink(obsidianUrl); }
+    else { window.location.href = obsidianUrl; }
   };
   document.getElementById('reader').classList.add('show');
   document.getElementById('reader-body').scrollTop = 0;
