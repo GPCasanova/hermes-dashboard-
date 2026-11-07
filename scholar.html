@@ -22,14 +22,20 @@
         .search-row input { flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 10px 16px; border-radius: 10px; font-size: 0.95rem; outline: none; }
         .search-row button { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; }
         
+        .filters { display: flex; gap: 8px; max-width: 800px; margin: 12px auto 0; overflow-x: auto; }
+        .filter-chip { background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; white-space: nowrap; }
+        .filter-chip.active { background: var(--accent); color: white; border-color: var(--accent); }
+
         .container { max-width: 800px; margin: 0 auto; padding: 16px; }
         .paper-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
         .paper-title { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 6px; line-height: 1.4; }
         .paper-meta { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; }
         .paper-abstract { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; max-height: 4.5em; overflow: hidden; transition: max-height 0.3s; }
         .paper-abstract.expanded { max-height: none; }
-        .paper-actions { display: flex; gap: 8px; margin-top: 12px; }
-        .btn-save { flex: 1; background: var(--accent); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .paper-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+        .btn-save { flex: 1; background: var(--accent); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; min-width: 100px; }
+        .btn-digest { flex: 1; background: #8b5cf6; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; min-width: 100px; }
+        .btn-related { flex: 1; background: #f59e0b; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; min-width: 100px; }
         .btn-expand { background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; }
         .empty-state { text-align: center; color: var(--text-muted); padding: 40px 20px; }
         .loading { text-align: center; color: var(--text-muted); padding: 40px; }
@@ -50,6 +56,11 @@
             <input type="text" id="query" placeholder="Buscar papers, autores, temas..." onkeydown="if(event.key==='Enter')buscar()">
             <button onclick="buscar()">🔍</button>
         </div>
+        <div class="filters" id="filters">
+            <span class="filter-chip" data-filter="oa" onclick="toggleFilter(this)">Open Access</span>
+            <span class="filter-chip" data-filter="recent" onclick="toggleFilter(this)">Últimos 5 años</span>
+            <span class="filter-chip" data-filter="cited" onclick="toggleFilter(this)">Más citados</span>
+        </div>
     </header>
     <div class="container" id="results">
         <div class="empty-state">Escribe un tema y pulsa buscar.</div>
@@ -61,11 +72,19 @@
         
         const WORKER = "https://scholar-proxy.geisercasanova.workers.dev/";
         let currentSource = 'openalex';
+        let activeFilters = new Set();
+        let currentPapers = [];
 
         function setTab(source) {
             currentSource = source;
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById('tab-' + source).classList.add('active');
+        }
+
+        function toggleFilter(el) {
+            const f = el.dataset.filter;
+            if (activeFilters.has(f)) { activeFilters.delete(f); el.classList.remove("active"); }
+            else { activeFilters.add(f); el.classList.add("active"); }
         }
 
         function reconstructAbstract(inv) {
@@ -87,11 +106,19 @@
             try {
                 let papers = [];
                 if (currentSource === 'openalex') {
-                    // OpenAlex directo con mailto (evita bloqueo de Cloudflare)
-                    const url = `https://api.openalex.org/works?search=${encodeURIComponent(q)}&select=id,doi,display_name,publication_year,cited_by_count,authorships,primary_location,abstract_inverted_index&per_page=20&mailto=geisercasanova@gmail.com`;
+                    let filters = [];
+                    if (activeFilters.has("oa")) filters.push("is_oa:true");
+                    if (activeFilters.has("recent")) filters.push("publication_year:>" + (new Date().getFullYear() - 5));
+                    let sort = activeFilters.has("cited") ? "cited_by_count:desc" : "relevance_score:desc";
+                    
+                    let url = `https://api.openalex.org/works?search=${encodeURIComponent(q)}&select=id,doi,display_name,publication_year,cited_by_count,authorships,primary_location,abstract_inverted_index&per_page=20&mailto=geisercasanova@gmail.com`;
+                    if (filters.length) url += `&filter=${filters.join(',')}`;
+                    url += `&sort=${sort}`;
+
                     const r = await fetch(url);
                     const data = await r.json();
                     papers = (data.results || []).map(p => ({
+                        id: p.id,
                         title: p.display_name || "Sin título",
                         authors: (p.authorships || []).map(a => a.author?.display_name).filter(Boolean).join(", "),
                         year: p.publication_year || "",
@@ -101,10 +128,10 @@
                         url: p.doi ? `https://doi.org/${p.doi.replace('https://doi.org/', '')}` : ""
                     }));
                 } else {
-                    // PubMed y arXiv usan el Worker
                     const r = await fetch(WORKER + "?source=" + currentSource + "&q=" + encodeURIComponent(q));
                     papers = await r.json();
                 }
+                currentPapers = papers;
                 render(papers);
             } catch (e) {
                 results.innerHTML = '<div class="empty-state">Error: ' + e.message + '</div>';
@@ -120,16 +147,70 @@
             results.innerHTML = papers.map((p, idx) => {
                 const abstract = p.abstract || "Sin resumen disponible.";
                 const safeId = 'abs-' + idx;
+                
+                // Botones condicionales
+                let relatedBtn = currentSource === 'openalex' ? `<button class="btn-related" onclick="buscarRelacionados('${p.id}')">🔗 Relacionados</button>` : '';
+
                 return `<div class="paper-card">
                     <div class="paper-title">${p.title}</div>
                     <div class="paper-meta">${p.authors || "Autores desconocidos"} · ${p.year || "—"} · ${p.venue || "—"}</div>
                     ${abstract !== "Sin resumen disponible." ? `<div class="paper-abstract" id="${safeId}">${abstract.slice(0, 400)}...</div>` : ""}
                     <div class="paper-actions">
                         ${abstract !== "Sin resumen disponible." ? `<button class="btn-expand" onclick="document.getElementById('${safeId}').classList.toggle('expanded')">Ver más</button>` : ""}
-                        <button class="btn-save" disabled>📥 Guardar (pronto)</button>
+                        <button class="btn-digest" onclick="resumirPaper('${idx}')">✨ Resumir</button>
+                        ${relatedBtn}
+                        <button class="btn-save" onclick="guardarPaper('${idx}')">📥 Guardar</button>
                     </div>
                 </div>`;
             }).join("");
+        }
+
+        async function buscarRelacionados(paperId) {
+            const results = document.getElementById('results');
+            results.innerHTML = '<div class="loading">Buscando papers relacionados...</div>';
+            document.getElementById('count').textContent = "…";
+            try {
+                const cleanId = paperId.split('/').pop();
+                const r = await fetch(`https://api.openalex.org/works?filter=related_to:${cleanId}&per_page=20&mailto=geisercasanova@gmail.com`);
+                const data = await r.json();
+                const papers = (data.results || []).map(p => ({
+                    id: p.id,
+                    title: p.display_name || "Sin título",
+                    authors: (p.authorships || []).map(a => a.author?.display_name).filter(Boolean).join(", "),
+                    year: p.publication_year || "",
+                    venue: p.primary_location?.source?.display_name || "",
+                    doi: p.doi || "",
+                    abstract: reconstructAbstract(p.abstract_inverted_index),
+                    url: p.doi ? `https://doi.org/${p.doi.replace('https://doi.org/', '')}` : ""
+                }));
+                currentPapers = papers;
+                render(papers);
+            } catch (e) {
+                results.innerHTML = '<div class="empty-state">Error: ' + e.message + '</div>';
+            }
+        }
+
+        function resumirPaper(idx) {
+            const p = currentPapers[idx];
+            if (!p || !p.abstract) { alert("No hay abstract para resumir"); return; }
+            if (tg && tg.sendData) {
+                tg.sendData(JSON.stringify({ action: "scholar_digest", title: p.title, abstract: p.abstract }));
+            } else alert("Abre desde Telegram para usar esta función");
+        }
+
+        function guardarPaper(idx) {
+            const p = currentPapers[idx];
+            if (!p) return;
+            if (tg && tg.sendData) {
+                tg.sendData(JSON.stringify({
+                    action: "doi_to_note",
+                    title: p.title,
+                    authors: p.authors,
+                    year: p.year,
+                    venue: p.venue,
+                    doi: p.doi
+                }));
+            } else alert("Abre desde Telegram para guardar.");
         }
     </script>
 </body>
