@@ -113,7 +113,7 @@
                         ${areaText ? `<span class="task-area">${areaText}</span>` : '<span></span>'}
                         ${dueText ? `<span class="task-due">📅 ${dueText}</span>` : ''}
                     </div>
-                    <a href="${obsidianUrl}" class="btn-open" onclick="event.preventDefault(); abrirEnObsidian('${encodeURIComponent(task.path)}')">✏️ Editar en Obsidian</a>
+                    <button class="btn-open" data-path="${encodeURIComponent(task.path)}" onclick="abrirEnObsidian(this)">✏️ Editar en Obsidian</button>
                 </div>`;
             });
 
@@ -121,7 +121,8 @@
             return html;
         }
 
-        function abrirEnObsidian(encodedPath) {
+        function abrirEnObsidian(el) {
+            const encodedPath = el.getAttribute('data-path');
             const path = decodeURIComponent(encodedPath);
             const url = 'https://gpcasanova.github.io/hermes-dashboard-/redirect.html?vault=CDGePeCa&file=' + encodeURIComponent(path);
             if (typeof tg !== 'undefined' && tg && tg.openLink) { tg.openLink(url); }
