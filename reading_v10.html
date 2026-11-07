@@ -88,10 +88,10 @@
                     var obsidianUrl = 'obsidian://open?vault=' + encodeURIComponent(vaultName) + '&file=' + encodeURIComponent(p.path);
                     var androidIntent = 'intent://open?vault=' + encodeURIComponent(vaultName) + '&file=' + encodeURIComponent(p.path) + '#Intent;scheme=obsidian;package=md.obsidian;end';
                     
-                    link.href = androidIntent;
+                    link.href = obsidianUrl;
                     link.onclick = function(e) {
                         e.preventDefault();
-                        try { window.location.href = androidIntent; }
+                        try { if (tg && tg.openLink) { tg.openLink(obsidianUrl); } else { window.location.href = obsidianUrl; } }
                         catch (err) { window.location.href = obsidianUrl; }
                     };
                 }
