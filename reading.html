@@ -16,7 +16,10 @@
         .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
         .title { font-size: 1rem; font-weight: 700; margin-bottom: 8px; line-height: 1.4; color: #60a5fa; }
         .snippet { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5; }
-        .btn-read { width: 100%; background: var(--accent); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px; }
+        .actions { display: flex; gap: 8px; margin-top: 12px; }
+        .btn-doi { flex: 1; background: #3b82f6; color: white; text-decoration: none; padding: 10px; border-radius: 8px; font-weight: 600; text-align: center; display: flex; justify-content: center; align-items: center; }
+        .btn-obsidian { flex: 1; background: #8b5cf6; color: white; text-decoration: none; padding: 10px; border-radius: 8px; font-weight: 600; text-align: center; display: flex; justify-content: center; align-items: center; }
+        .btn-read { flex: 1; background: var(--accent); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; }
         .empty { text-align: center; color: var(--text-muted); padding: 40px 20px; }
         .loading { text-align: center; color: var(--accent); padding: 40px; }
     </style>
@@ -62,12 +65,24 @@
             results.innerHTML = papers.map(p => {
                 const title = p.title || "Sin título";
                 const snippet = p.snippet ? p.snippet.replace(/</g, "&lt;").replace(/>/g, "&gt;") : "Sin resumen.";
-                // Escapar comillas simples para el onclick
                 const safePath = p.path.replace(/'/g, "\\'");
+                
+                // Extraer DOI del contenido de la nota
+                const doiMatch = p.content ? p.content.match(/doi:\s*"?(10\.\d{4,9}\/[^\s"]+)"?/i) : null;
+                const doi = doiMatch ? doiMatch[1] : null;
+                const doiBtn = doi ? `<a href="https://doi.org/${doi}" target="_blank" class="btn-doi">📄 Leer</a>` : '';
+                
+                // Enlace a Obsidian (usando el URI scheme oficial)
+                const obsidianUrl = `obsidian://open?vault=CDGePeCa&file=${encodeURIComponent(p.path)}`;
+                
                 return `<div class="card">
                     <div class="title">${title}</div>
                     <div class="snippet">${snippet}</div>
-                    <button class="btn-read" onclick="marcarLeido('${safePath}')">✅ Marcar como Leído</button>
+                    <div class="actions">
+                        ${doiBtn}
+                        <a href="${obsidianUrl}" class="btn-obsidian">🔮 Obsidian</a>
+                        <button class="btn-read" onclick="marcarLeido('${safePath}')">✅ Leído</button>
+                    </div>
                 </div>`;
             }).join('');
         }
