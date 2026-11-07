@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hermes Reading Queue</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root { --bg: #0f172a; --surface: #1e293b; --text: #f8fafc; --text-muted: #94a3b8; --accent: #10b981; --border: #334155; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        header { position: sticky; top: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); z-index: 100; border-bottom: 1px solid var(--border); padding: 16px; display: flex; justify-content: space-between; align-items: center; }
+        h1 { font-size: 1.25rem; font-weight: 700; }
+        .badge { font-size: 0.75rem; background: var(--surface); border: 1px solid var(--border); padding: 4px 10px; border-radius: 20px; color: var(--text-muted); }
+        .container { max-width: 800px; margin: 0 auto; padding: 16px; }
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+        .title { font-size: 1rem; font-weight: 700; margin-bottom: 8px; line-height: 1.4; color: #60a5fa; }
+        .snippet { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5; }
+        .actions { display: flex; gap: 8px; margin-top: 12px; }
+        .btn-doi { flex: 1; background: #3b82f6; color: white; text-decoration: none; padding: 10px; border-radius: 8px; font-weight: 600; text-align: center; display: flex; justify-content: center; align-items: center; }
+        .btn-obsidian { flex: 1; background: #8b5cf6; color: white; text-decoration: none; padding: 10px; border-radius: 8px; font-weight: 600; text-align: center; display: flex; justify-content: center; align-items: center; }
+        .btn-read { flex: 1; background: var(--accent); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+        .empty { text-align: center; color: var(--text-muted); padding: 40px 20px; }
+        .loading { text-align: center; color: var(--accent); padding: 40px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>📚 Reading Queue</h1>
+        <div class="badge" id="count">Cargando...</div>
+    </header>
+    <div class="container" id="results">
+        <div class="loading">Cargando tu cola de lectura...</div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        if (tg && tg.ready) { tg.ready(); tg.expand(); }
+
+        async function cargarCola() {
+            try {
+                // Cache-busting para evitar JSON viejo
+                const r = await fetch('vault.json?t=' + Date.now());
+                if (!r.ok) throw new Error("Error al cargar vault.json");
+                const data = await r.json();
+                
+                // Filtrar solo los que tienen el tag _unread
+                const pendientes = data.filter(n => n.tags && n.tags.includes('_unread'));
+                
+                document.getElementById('count').textContent = pendientes.length + " pendientes";
+                render(pendientes);
+            } catch (e) {
+                document.getElementById('results').innerHTML = `<div class="empty">Error: ${e.message}</div>`;
+                document.getElementById('count').textContent = "Error";
+            }
+        }
+
+        function render(papers) {
+            const results = document.getElementById('results');
+            if (!papers.length) {
+                results.innerHTML = '<div class="empty">🎉 ¡Felicidades! No tienes papers pendientes en tu cola.</div>';
+                return;
+            }
+
+            results.innerHTML = papers.map(p => {
+                const title = p.title || "Sin título";
+                const snippet = p.snippet ? p.snippet.replace(/</g, "&lt;").replace(/>/g, "&gt;") : "Sin resumen.";
+                const safePath = p.path.replace(/'/g, "\\'");
+                
+                // Nueva regex: busca cualquier patrón 10.xxxx/yyyy en el contenido
+                const doiMatch = p.content ? p.content.match(/(10\.\d{4,9}\/[-._;()\/:A-Z0-9]+)/i) : null;
+                const doi = doiMatch ? doiMatch[0] : null;
+                const doiBtn = doi ? `<a href="https://doi.org/${doi}" target="_blank" class="btn-doi">📄 Leer</a>` : '';
+                
+                return `<div class="card">
+                    <div class="title">${title}</div>
+                    <div class="snippet">${snippet}</div>
+                    <div class="actions">
+                        ${doiBtn}
+                        <button class="btn-obsidian" onclick="abrirObsidian('${safePath}')">🔮 Obsidian</button>
+                        <button class="btn-read" onclick="marcarLeido('${safePath}')">✅ Leído</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function abrirObsidian(path) {
+            const url = `obsidian://open?vault=CDGePeCa&file=${encodeURIComponent(path)}`;
+            if (tg && tg.openLink) {
+                tg.openLink(url);
+            } else {
+                window.location.href = url;
+            }
+        }
+
+        function marcarLeido(path) {
+            if (!tg || !tg.sendData) { alert("Abre desde Telegram para usar esta función"); return; }
+            tg.sendData(JSON.stringify({
+                action: "mark_read",
+                path: path
+            }));
+        }
+
+        cargarCola();
+    </script>
+</body>
+</html>
