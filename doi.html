@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hermes DOI</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root { --bg: #0f172a; --surface: #1e293b; --text: #f8fafc; --text-muted: #94a3b8; --accent: #3b82f6; --border: #334155; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        header { position: sticky; top: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); z-index: 100; border-bottom: 1px solid var(--border); padding: 16px; }
+        h1 { font-size: 1.25rem; font-weight: 700; margin-bottom: 12px; text-align: center; }
+        .search-row { display: flex; gap: 8px; }
+        .search-row input { flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 12px 16px; border-radius: 10px; font-size: 0.95rem; outline: none; }
+        .search-row button { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; }
+        .container { max-width: 800px; margin: 0 auto; padding: 16px; }
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+        .title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; line-height: 1.4; color: #60a5fa; }
+        .meta { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5; }
+        .bibtex-box { background: #000; border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-family: monospace; font-size: 0.8rem; color: #a78bfa; white-space: pre-wrap; word-break: break-all; max-height: 250px; overflow-y: auto; }
+        .actions { display: flex; gap: 10px; margin-top: 16px; }
+        .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; text-align: center; }
+        .btn-copy { background: var(--accent); color: white; }
+        .btn-save { background: #10b981; color: white; }
+        .empty { text-align: center; color: var(--text-muted); padding: 40px 0; }
+        .spinner { text-align: center; padding: 20px; color: var(--accent); }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🔬 DOI Resolver</h1>
+        <div class="search-row">
+            <input type="text" id="doi" placeholder="Ej: 10.1038/s41586-023-12345" onkeydown="if(event.key==='Enter')buscar()">
+            <button onclick="buscar()">🔍</button>
+        </div>
+    </header>
+    <div class="container" id="resultado">
+        <div class="empty">Pega un DOI para obtener su cita en BibTeX.</div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        if (tg && tg.ready) { tg.ready(); tg.expand(); }
+        const WORKER = "https://crossref-proxy.geisercasanova.workers.dev/";
+        let currentData = null;
+
+        function generateBibTeX(d) {
+            const type = d.type === 'journal-article' ? 'article' : (d.type || 'misc');
+            const authors = (d.author || []).map(a => `${a.family}, ${a.given}`).join(' and ');
+            const year = (d.published && d.published['date-parts']) ? d.published['date-parts'][0][0] : (d.created['date-parts'][0][0]);
+            const title = d.title ? d.title[0] : 'Sin título';
+            const journal = d['container-title'] ? d['container-title'][0] : '';
+            const volume = d.volume || '';
+            const pages = d.page || '';
+            const doi = d.DOI || '';
+            
+            return `@${type}{${d.DOI.replace(/[^a-zA-Z0-9]/g, '')},
+    title = {${title}},
+    author = {${authors}},
+    journal = {${journal}},
+    volume = {${volume}},
+    pages = {${pages}},
+    year = {${year}},
+    doi = {${doi}}
+}`;
+        }
+
+        async function buscar() {
+            const doiInput = document.getElementById('doi').value.trim();
+            if (!doiInput) return;
+            const resDiv = document.getElementById('resultado');
+            resDiv.innerHTML = '<div class="spinner">Consultando Crossref...</div>';
+
+            try {
+                const r = await fetch(WORKER + "?doi=" + encodeURIComponent(doiInput));
+                if (!r.ok) throw new Error("DOI no encontrado");
+                const data = await r.json();
+                currentData = data;
+                render(data);
+            } catch (e) {
+                resDiv.innerHTML = `<div class="empty">Error: ${e.message}</div>`;
+            }
+        }
+
+        function render(d) {
+            const resDiv = document.getElementById('resultado');
+            const title = d.title ? d.title[0] : 'Sin título';
+            const authors = (d.author || []).map(a => `${a.given} ${a.family}`).join(', ');
+            const year = (d.published && d.published['date-parts']) ? d.published['date-parts'][0][0] : '';
+            const journal = d['container-title'] ? d['container-title'][0] : '';
+            const bibtex = generateBibTeX(d);
+
+            resDiv.innerHTML = `
+                <div class="card">
+                    <div class="title">${title}</div>
+                    <div class="meta"><b>${authors}</b><br>${journal} · ${year}<br>DOI: ${d.DOI}</div>
+                    <div class="bibtex-box" id="bibtex-code">${bibtex}</div>
+                    <div class="actions">
+                        <button class="btn btn-copy" onclick="copiar()">📋 Copiar</button>
+                        <button class="btn btn-save" onclick="guardar('${title.replace(/'/g, "\\'")}', '${authors.replace(/'/g, "\\'")}', '${year}', '${journal.replace(/'/g, "\\'")}', '${d.DOI}')">📥 Guardar en Obsidian</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function copiar() {
+            const text = document.getElementById('bibtex-code').innerText;
+            navigator.clipboard.writeText(text).then(() => alert("BibTeX copiado al portapapeles"));
+        }
+
+        function guardar(title, authors, year, journal, doi) {
+            if (!tg || !tg.sendData) { alert("Abre desde Telegram para guardar"); return; }
+            tg.sendData(JSON.stringify({
+                action: "doi_to_note",
+                title: title,
+                authors: authors,
+                year: year,
+                venue: journal,
+                doi: doi
+            }));
+        }
+    </script>
+</body>
+</html>
