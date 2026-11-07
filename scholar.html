@@ -62,6 +62,7 @@
             <button class="tab-btn active" id="tab-openalex" onclick="setTab('openalex')">OpenAlex</button>
             <button class="tab-btn" id="tab-pubmed" onclick="setTab('pubmed')">PubMed</button>
             <button class="tab-btn" id="tab-arxiv" onclick="setTab('arxiv')">arXiv</button>
+            <button class="tab-btn" id="tab-europepmc" onclick="setTab('europepmc')">Europe PMC</button>
         </div>
         <div class="search-row">
             <input type="text" id="query" placeholder="Buscar papers, autores, temas..." onkeydown="if(event.key==='Enter')buscar()">
@@ -90,6 +91,14 @@
             currentSource = source;
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById('tab-' + source).classList.add('active');
+            
+            // Ocultar filtros para fuentes que no son OpenAlex
+            const filtersDiv = document.getElementById('filters');
+            if (source === 'openalex') {
+                filtersDiv.style.display = 'flex';
+            } else {
+                filtersDiv.style.display = 'none';
+            }
         }
 
         function toggleFilter(el) {
