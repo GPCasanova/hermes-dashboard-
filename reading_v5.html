@@ -83,8 +83,16 @@
 
         function abrirObsidian(encodedPath) {
             var path = decodeURIComponent(encodedPath);
-            if (!tg || !tg.sendData) { alert("Abre desde Telegram para usar esta función"); return; }
-            tg.sendData(JSON.stringify({ action: "open_obsidian", path: path }));
+            var vault = "CDGePeCa";
+            // Usamos el puente redirect.html que ya está en GitHub Pages
+            var redirectUrl = 'https://gpcasanova.github.io/hermes-dashboard-/redirect.html?vault=' + encodeURIComponent(vault) + '&file=' + encodeURIComponent(path);
+            
+            if (tg && tg.openLink) {
+                // tg.openLink abre el enlace en el navegador externo (Chrome)
+                tg.openLink(redirectUrl);
+            } else {
+                window.location.href = redirectUrl;
+            }
         }
 
         function marcarLeido(encodedPath) {
