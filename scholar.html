@@ -125,6 +125,7 @@
                     ${abstract ? `<div class="paper-abstract" id="abs-${safeId}">${abstract}...</div>` : ""}
                     <div class="paper-actions">
                         ${abstract ? `<button class="btn-expand" onclick="document.getElementById('abs-${safeId}').classList.toggle('expanded')">Ver más</button>` : ""}
+                        <button class="btn-save" style="background: #f59e0b; margin-right: 4px;" onclick="buscarRelacionados('${p.id}')">🔗 Relacionados</button>
                         <button class="btn-save" style="background: #8b5cf6; margin-right: 4px;" onclick="resumirPaper('${p.id}')">✨ Resumir</button>
                         <button class="btn-save" onclick="guardarPaper('${p.id}')">📥 Guardar</button>
                     </div>
@@ -144,6 +145,21 @@
                     abstract: abstract
                 }));
             } else alert("Abre desde Telegram para usar esta función");
+        }
+        async function buscarRelacionados(paperId) {
+            const results = document.getElementById("results");
+            results.innerHTML = '<div class="loading">Buscando papers relacionados...</div>';
+            document.getElementById("count").textContent = "…";
+
+            try {
+                const r = await fetch(`https://api.openalex.org/works?filter=related_to:${paperId}&per_page=20`);
+                if (!r.ok) throw new Error("Error en OpenAlex");
+                const data = await r.json();
+                render(data.results || []);
+            } catch (e) {
+                results.innerHTML = `<div class="empty-state">Error: ${e.message}</div>`;
+                document.getElementById("count").textContent = "error";
+            }
         }
         function guardarPaper(paperId) {
             const p = (window._papersById || {})[paperId];
