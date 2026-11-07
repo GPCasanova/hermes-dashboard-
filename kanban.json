@@ -5,7 +5,11 @@
     "publicaciones",
     "tesis-doctoral"
   ],
-  "_projects": [],
+  "_projects": [
+    "cambio-de-categoria-a-auxiliar",
+    "publicaci-n-cient-fica",
+    "doctorado"
+  ],
   "default": [],
   "cambio-categoria": [
     {
