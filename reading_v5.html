@@ -18,7 +18,6 @@
         .snippet { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5; }
         .actions { display: flex; gap: 8px; margin-top: 12px; }
         .btn-doi { flex: 1; background: #3b82f6; color: white; text-decoration: none; padding: 10px; border-radius: 8px; font-weight: 600; text-align: center; display: flex; justify-content: center; align-items: center; }
-        .btn-obsidian { flex: 1; background: #8b5cf6; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; text-align: center; text-decoration: none; display: flex; justify-content: center; align-items: center; }
         .btn-read { flex: 1; background: var(--accent); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; }
         .empty { text-align: center; color: var(--text-muted); padding: 40px 20px; }
         .loading { text-align: center; color: var(--accent); padding: 40px; }
@@ -46,7 +45,7 @@
                 document.getElementById('count').textContent = pendientes.length + " pendientes";
                 render(pendientes);
             } catch (e) {
-                document.getElementById('results').innerHTML = `<div class="empty">Error: ${e.message}</div>`;
+                document.getElementById('results').innerHTML = '<div class="empty">Error: ' + e.message + '</div>';
                 document.getElementById('count').textContent = "Error";
             }
         }
@@ -58,45 +57,30 @@
                 return;
             }
 
-            results.innerHTML = papers.map(p => {
-                const title = p.title || "Sin título";
-                const snippet = p.snippet ? p.snippet.replace(/</g, "&lt;").replace(/>/g, "&gt;") : "Sin resumen.";
-                const safePath = p.path.replace(/'/g, "\\'");
+            results.innerHTML = papers.map(function(p) {
+                var title = p.title || "Sin título";
+                var snippet = p.snippet ? p.snippet.replace(/</g, "&lt;").replace(/>/g, "&gt;") : "Sin resumen.";
                 
-                const doiMatch = p.content ? p.content.match(/(10\.\d{4,9}\/[-._;()\/:A-Z0-9]+)/i) : null;
-                const doi = doiMatch ? doiMatch[0] : null;
-                const doiBtn = doi ? `<a href="https://doi.org/${doi}" target="_blank" class="btn-doi">📄 Leer</a>` : '';
+                var doiMatch = p.content ? p.content.match(/(10\\.\\d{4,9}\\/[-._;()\\/:A-Z0-9]+)/i) : null;
+                var doi = doiMatch ? doiMatch[0] : null;
+                var doiBtn = doi ? '<a href="https://doi.org/' + doi + '" target="_blank" class="btn-doi">📄 Leer</a>' : '';
+                
+                var safePath = encodeURIComponent(p.path);
 
-                return `<div class="card">
-                    <div class="title">${title}</div>
-                    <div class="snippet">${snippet}</div>
-                    <div class="actions">
-                        ${doiBtn}
-                        <a href="#" class="btn-obsidian" onclick="abrirObsidian('${safePath}'); return false;">🔮 Obsidian</a>
-                        <button class="btn-read" onclick="marcarLeido('${safePath}')">✅ Leído</button>
-                    </div>
-                </div>`;
+                return '<div class="card">' +
+                    '<div class="title">' + title + '</div>' +
+                    '<div class="snippet">' + snippet + '</div>' +
+                    '<div class="actions">' +
+                        doiBtn +
+                        '<button class="btn-read" onclick="marcarLeido(\\'' + safePath + '\\')">✅ Leído</button>' +
+                    '</div>' +
+                '</div>';
             }).join('');
         }
 
-        function abrirObsidian(path) {
-            const vaultName = "CDGePeCa";
-            const obsidianUrl = `obsidian://open?vault=${encodeURIComponent(vaultName)}&file=${encodeURIComponent(path)}`;
-            const androidIntent = `intent://open?vault=${encodeURIComponent(vaultName)}&file=${encodeURIComponent(path)}#Intent;scheme=obsidian;package=md.obsidian;end`;
-            
-            if (tg && tg.openLink) {
-                try {
-                    tg.openLink(androidIntent);
-                } catch (err) {
-                    window.location.href = obsidianUrl;
-                }
-            } else {
-                window.location.href = androidIntent;
-            }
-        }
-
-        function marcarLeido(path) {
+        function marcarLeido(encodedPath) {
             if (!tg || !tg.sendData) { alert("Abre desde Telegram para usar esta función"); return; }
+            var path = decodeURIComponent(encodedPath);
             tg.sendData(JSON.stringify({ action: "mark_read", path: path }));
         }
 
