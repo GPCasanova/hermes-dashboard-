@@ -34,6 +34,7 @@
         .btn-open:active { background: var(--accent); color: white; }
         .empty-col { text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 20px; }
     </style>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
     <header>
@@ -46,6 +47,7 @@
     <div class="board-container" id="board-container"></div>
 
     <script>
+        const tg = window.Telegram?.WebApp;
         let allTasks = [];
         let currentTab = 'tasks';
         const COLUMNS_ORDER = ["open", "in-progress", "done"];
@@ -111,7 +113,7 @@
                         ${areaText ? `<span class="task-area">${areaText}</span>` : '<span></span>'}
                         ${dueText ? `<span class="task-due">📅 ${dueText}</span>` : ''}
                     </div>
-                    <a href="${obsidianUrl}" class="btn-open" onclick="event.preventDefault(); if(tg && tg.openLink){ tg.openLink('${obsidianUrl}'); } else { window.location.href='${obsidianUrl}'; }">✏️ Editar en Obsidian</a>
+                    <a href="${obsidianUrl}" class="btn-open" onclick="event.preventDefault(); abrirEnObsidian('${encodeURIComponent(task.path)}')">✏️ Editar en Obsidian</a>
                 </div>`;
             });
 
@@ -119,8 +121,11 @@
             return html;
         }
 
-        function abrirObsidian(intentUrl, httpUrl) {
-            try { window.location.href = intentUrl; } catch (e) { window.location.href = httpUrl; }
+        function abrirEnObsidian(encodedPath) {
+            const path = decodeURIComponent(encodedPath);
+            const url = 'https://gpcasanova.github.io/hermes-dashboard-/redirect.html?vault=CDGePeCa&file=' + encodeURIComponent(path);
+            if (typeof tg !== 'undefined' && tg && tg.openLink) { tg.openLink(url); }
+            else { window.location.href = url; }
         }
 
         loadTasks();
