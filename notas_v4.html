@@ -274,10 +274,10 @@ function openReader(idx) {
   const obsidianUrl = 'obsidian://open?vault=' + encodeURIComponent(vaultName) + '&file=' + encodeURIComponent(note.path);
   const androidIntent = 'intent://open?vault=' + encodeURIComponent(vaultName) + '&file=' + encodeURIComponent(note.path) + '#Intent;scheme=obsidian;package=md.obsidian;end';
   const link = document.getElementById('reader-obsidian-link');
-  link.href = obsidianUrl;
+  link.href = androidIntent;
   link.onclick = function(e) {
     e.preventDefault();
-    try { if (tg && tg.openLink) { tg.openLink(obsidianUrl); } else { window.location.href = obsidianUrl; } }
+    try { window.location.href = androidIntent; }
     catch (err) { window.location.href = obsidianUrl; }
   };
   document.getElementById('reader').classList.add('show');
