@@ -48,7 +48,16 @@
             <button class="btn btn-cover" onclick="enviar('cover_letter')">✉️ Cover Letter</button>
             <button class="btn btn-reply" onclick="enviar('review_reply')">💬 Responder Revisor</button>
             <button class="btn btn-keywords" onclick="enviar('keywords')">🔑 Keywords</button>
-            <button class="btn btn-article" onclick="enviar('full_article')" style="grid-column: span 2; background: #f97316;">📄 Generar Artículo Completo (IMRyD)</button>
+            <div style="grid-column: span 2; margin-bottom: 4px;">
+                <select id="article-type" style="width: 100%; padding: 12px; border-radius: 10px; background: var(--surface); color: white; border: 1px solid var(--border); font-family: inherit; font-size: 0.9rem;">
+                    <option value="original">Artículo Original (IMRyD)</option>
+                    <option value="systematic_review">Revisión Sistemática (PRISMA)</option>
+                    <option value="case_report">Reporte de Caso Clínico</option>
+                    <option value="editorial">Editorial / Opinión</option>
+                    <option value="protocol">Protocolo de Investigación</option>
+                </select>
+            </div>
+            <button class="btn btn-article" onclick="enviar('full_article')" style="grid-column: span 2; background: #f97316;">📄 Generar Artículo Completo</button>
         </div>
     </div>
     <script>
@@ -58,7 +67,12 @@
             const text = document.getElementById('text-input').value.trim();
             if (!text) { alert("Pega un texto primero"); return; }
             if (!tg || !tg.sendData) { alert("Abre desde Telegram para usar esta función"); return; }
-            tg.sendData(JSON.stringify({ action: "ai_writer", mode: mode, text: text }));
+            
+            let payload = { action: "ai_writer", mode: mode, text: text };
+            if (mode === 'full_article') {
+                payload.article_type = document.getElementById('article-type').value;
+            }
+            tg.sendData(JSON.stringify(payload));
         }
     </script>
 </body>
