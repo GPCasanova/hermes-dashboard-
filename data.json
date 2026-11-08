@@ -1,6 +1,6 @@
 {
-  "timestamp": 1794127202,
-  "ram": {"free": 844, "total": 3653},
+  "timestamp": 1794127502,
+  "ram": {"free": 828, "total": 3653},
   "vpn": {"ip": "0.0.0.0", "country": "?"},
   "gateway": {"pid": "", "uptime": ""},
   "crons": {"active": 16},
