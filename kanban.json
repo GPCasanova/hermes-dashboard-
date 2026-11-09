@@ -5,7 +5,11 @@
     "publicaciones",
     "tesis-doctoral"
   ],
-  "_projects": [],
+  "_projects": [
+    "cambio-de-categoria-a-auxiliar",
+    "publicaci-n-cient-fica",
+    "doctorado"
+  ],
   "default": [],
   "cambio-categoria": [
     {
@@ -42,51 +46,6 @@
       "due_date": null
     }
   ],
-  "publicaciones": [
-    {
-      "id": "t_21f0ee3c",
-      "status": "ready",
-      "assignee": "unassigned",
-      "title": "Estado del Arte",
-      "priority": 2,
-      "created_at": 1793915086,
-      "started_at": null,
-      "completed_at": null,
-      "due_date": null
-    },
-    {
-      "id": "t_194fac0b",
-      "status": "scheduled",
-      "assignee": "unassigned",
-      "title": "Revisiones Bibliográficas",
-      "priority": 0,
-      "created_at": 1793676646,
-      "started_at": null,
-      "completed_at": null,
-      "due_date": null
-    },
-    {
-      "id": "t_6317eee6",
-      "status": "scheduled",
-      "assignee": "unassigned",
-      "title": "Elaborar informe",
-      "priority": 0,
-      "created_at": 1793676997,
-      "started_at": null,
-      "completed_at": null,
-      "due_date": null
-    },
-    {
-      "id": "t_c2a2ba8d",
-      "status": "scheduled",
-      "assignee": "unassigned",
-      "title": "Buscar bibliografias 2026",
-      "priority": 0,
-      "created_at": 1793812342,
-      "started_at": null,
-      "completed_at": null,
-      "due_date": null
-    }
-  ],
+  "publicaciones": [],
   "tesis-doctoral": []
 }
