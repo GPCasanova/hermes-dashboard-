@@ -64,11 +64,16 @@
                     <option value="MOOSE">Guía de Reporte: MOOSE (Observacional)</option>
                     <option value="ENTREQ">Guía de Reporte: ENTREQ (Cualitativa)</option>
                 </select>
-                <select id="review-method" style="width: 100%; padding: 12px; border-radius: 10px; background: var(--surface); color: white; border: 1px solid var(--border); font-family: inherit; font-size: 0.9rem;">
+                <select id="review-method" style="width: 100%; padding: 12px; border-radius: 10px; background: var(--surface); color: white; border: 1px solid var(--border); font-family: inherit; font-size: 0.9rem; margin-bottom: 6px;">
                     <option value="Cochrane Handbook">Metodología: Cochrane Handbook</option>
                     <option value="JBI (Joanna Briggs Institute)">Metodología: JBI</option>
                     <option value="Campbell Collaboration">Metodología: Campbell Collaboration</option>
                 </select>
+                <textarea id="picos-question" placeholder="Pregunta PICOS (opcional): Ej. En pacientes adultos con sepsis (P), el ML (I) vs scores clínicos (C), mejora la detección (O) en cohortes (S)" style="width: 100%; padding: 12px; border-radius: 10px; background: var(--surface); color: white; border: 1px solid var(--border); font-family: inherit; font-size: 0.85rem; min-height: 60px; resize: vertical; margin-bottom: 6px;"></textarea>
+                <label style="display: flex; align-items: center; gap: 8px; color: white; font-size: 0.9rem; padding: 8px; background: var(--surface); border-radius: 10px; border: 1px solid var(--border);">
+                    <input type="checkbox" id="include-grade" style="width: 20px; height: 20px;">
+                    Incluir tabla GRADE de certeza de evidencia
+                </label>
             </div>
             <button class="btn btn-article" onclick="enviar('full_article')" style="grid-column: span 2; background: #f97316;">📄 Generar Artículo Completo</button>
         </div>
@@ -98,6 +103,8 @@
                 if (payload.article_type === 'systematic_review') {
                     payload.report_guideline = document.getElementById('report-guide').value;
                     payload.review_methodology = document.getElementById('review-method').value;
+                    payload.picos_question = document.getElementById('picos-question').value.trim();
+                    payload.include_grade = document.getElementById('include-grade').checked;
                 }
             }
             tg.sendData(JSON.stringify(payload));
