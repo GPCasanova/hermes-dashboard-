@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Journal Finder</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root { --bg: #0f172a; --surface: #1e293b; --text: #f8fafc; --text-muted: #94a3b8; --accent: #f59e0b; --border: #334155; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+        header { position: sticky; top: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); z-index: 100; border-bottom: 1px solid var(--border); padding: 16px; }
+        h1 { font-size: 1.25rem; font-weight: 700; color: var(--accent); text-align: center; margin-bottom: 12px; }
+        .search-box { display: flex; gap: 8px; max-width: 800px; margin: 0 auto; }
+        .search-box textarea { flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 12px; font-size: 0.9rem; font-family: inherit; resize: none; height: 60px; outline: none; }
+        .search-box button { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; cursor: pointer; }
+        .container { flex: 1; max-width: 800px; margin: 0 auto; width: 100%; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+        .title { font-weight: 700; color: var(--text); font-size: 1rem; line-height: 1.4; }
+        .meta { font-size: 0.8rem; color: var(--text-muted); }
+        .metrics { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+        .tag { font-size: 0.75rem; padding: 2px 8px; border-radius: 6px; font-weight: 600; }
+        .tag-if { background: rgba(245, 158, 11, 0.15); color: var(--accent); border: 1px solid var(--accent); }
+        .tag-oa { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid #10b981; }
+        .tag-apc { background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid #3b82f6; }
+        .actions { display: flex; gap: 8px; margin-top: 8px; }
+        .btn-save { flex: 1; background: var(--accent); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .btn-visit { flex: 1; background: #334155; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 600; text-decoration: none; text-align: center; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>📚 Buscador de Revistas</h1>
+        <div class="search-box">
+            <textarea id="query" placeholder="Pega aquí el título o abstract de tu artículo..."></textarea>
+            <button onclick="buscar()">🔍</button>
+        </div>
+    </header>
+    <div class="container" id="results">
+        <div class="empty-state">Pega tu texto y pulsa buscar para encontrar revistas.</div>
+    </div>
+    <script>
+        const tg = window.Telegram.WebApp;
+        if (tg && tg.ready) { tg.ready(); tg.expand(); }
+        const WORKER = "https://journal-proxy.geisercasanova.workers.dev/";
+
+        async function buscar() {
+            const q = document.getElementById('query').value.trim();
+            if (!q) return;
+            const results = document.getElementById('results');
+            results.innerHTML = '<div style="text-align:center; padding:20px;">Buscando revistas...</div>';
+            
+            try {
+                // Tomamos solo las primeras palabras del abstract para no sobrecargar
+                const shortQuery = q.split(' ').slice(0, 6).join(' ');
+                const r = await fetch(WORKER + "?q=" + encodeURIComponent(shortQuery));
+                const data = await r.json();
+                render(data);
+            } catch (e) {
+                results.innerHTML = '<div style="text-align:center;">Error: ' + e.message + '</div>';
+            }
+        }
+
+        function render(journals) {
+            const results = document.getElementById('results');
+            if (!journals.length) {
+                results.innerHTML = '<div style="text-align:center; padding:20px;">No se encontraron revistas para ese tema.</div>';
+                return;
+            }
+
+            results.innerHTML = journals.map((j, idx) => {
+                let metrics = '';
+                if (j.impact_factor) metrics += `<span class="tag tag-if">IF: ${j.impact_factor.toFixed(2)}</span>`;
+                if (j.h_index) metrics += `<span class="tag tag-if">h-index: ${j.h_index}</span>`;
+                if (j.is_oa) metrics += `<span class="tag tag-oa">Open Access</span>`;
+                if (j.apc && j.apc !== "No reportado" && j.apc !== "Sin APC") metrics += `<span class="tag tag-apc">APC: ${j.apc}</span>`;
+
+                const safeJournal = encodeURIComponent(JSON.stringify(j));
+
+                return `<div class="card">
+                    <div class="title">${j.name}</div>
+                    <div class="meta">${j.publisher || 'Editorial no reportada'} · ISSN: ${j.issn || 'N/A'}</div>
+                    <div class="metrics">${metrics}</div>
+                    <div class="actions">
+                        <button class="btn-save" onclick="guardar('${safeJournal}')">💾 Guardar en Obsidian</button>
+                        ${j.url ? `<a href="${j.url}" target="_blank" class="btn-visit">🌐 Visitar</a>` : ''}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function guardar(encoded) {
+            if (!tg || !tg.sendData) { alert("Abre desde Telegram"); return; }
+            const j = JSON.parse(decodeURIComponent(encoded));
+            tg.sendData(JSON.stringify({
+                action: "journal_to_note",
+                name: j.name,
+                issn: j.issn,
+                publisher: j.publisher,
+                impact_factor: j.impact_factor,
+                h_index: j.h_index,
+                apc: j.apc,
+                review_time: j.review_time,
+                url: j.url
+            }));
+        }
+    </script>
+</body>
+</html>
