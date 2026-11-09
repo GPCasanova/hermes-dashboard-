@@ -11,9 +11,12 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
         header { position: sticky; top: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); z-index: 100; border-bottom: 1px solid var(--border); padding: 16px; }
         h1 { font-size: 1.25rem; font-weight: 700; color: var(--accent); text-align: center; margin-bottom: 12px; }
-        .search-box { display: flex; gap: 8px; max-width: 800px; margin: 0 auto; }
-        .search-box textarea { flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 12px; font-size: 0.9rem; font-family: inherit; resize: none; height: 60px; outline: none; }
-        .search-box button { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; cursor: pointer; }
+        .search-box { display: flex; flex-direction: column; gap: 8px; max-width: 800px; margin: 0 auto; }
+        textarea { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 12px; font-size: 0.9rem; font-family: inherit; resize: none; outline: none; }
+        .row-search { display: flex; gap: 8px; }
+        .row-search textarea { flex: 1; height: 50px; }
+        .row-search button { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; cursor: pointer; }
+        #my-paper { height: 60px; font-size: 0.8rem; }
         .container { flex: 1; max-width: 800px; margin: 0 auto; width: 100%; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
         .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
         .title { font-weight: 700; color: var(--text); font-size: 1rem; line-height: 1.4; }
@@ -23,27 +26,36 @@
         .tag-if { background: rgba(245, 158, 11, 0.15); color: var(--accent); border: 1px solid var(--accent); }
         .tag-oa { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid #10b981; }
         .tag-apc { background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid #3b82f6; }
-        .actions { display: flex; gap: 8px; margin-top: 8px; }
-        .btn-save { flex: 1; background: var(--accent); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; }
-        .btn-visit { flex: 1; background: #334155; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 600; text-decoration: none; text-align: center; }
+        .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+        .btn { flex: 1; padding: 10px; border-radius: 8px; font-weight: 600; font-size: 0.8rem; border: none; cursor: pointer; text-align: center; text-decoration: none; min-width: 120px; }
+        .btn-save { background: var(--accent); color: white; }
+        .btn-visit { background: #334155; color: white; }
+        .btn-ai { background: #8b5cf6; color: white; }
+        .btn-scope { background: #ec4899; color: white; }
+        .status-row { display: flex; gap: 8px; align-items: center; margin-top: 4px; }
+        .status-row select { background: #1e293b; color: white; border: 1px solid #334155; padding: 6px; border-radius: 6px; font-size: 0.8rem; }
     </style>
 </head>
 <body>
     <header>
         <h1>📚 Buscador de Revistas</h1>
         <div class="search-box">
-            <textarea id="query" placeholder="Pega aquí el título o abstract de tu artículo..."></textarea>
-            <button onclick="buscar()">🔍</button>
+            <textarea id="my-paper" placeholder="Opcional: Pega aquí el título o abstract de tu artículo para Cover Letter y Scope Match..."></textarea>
+            <div class="row-search">
+                <textarea id="query" placeholder="Tema de búsqueda (ej. machine learning cardiology)"></textarea>
+                <button onclick="buscar()">🔍</button>
+            </div>
         </div>
     </header>
     <div class="container" id="results">
-        <div class="empty-state">Pega tu texto y pulsa buscar para encontrar revistas.</div>
+        <div style="text-align:center; padding:20px;">Pega un tema y pulsa buscar para encontrar revistas.</div>
     </div>
     <script>
         const tg = window.Telegram.WebApp;
         if (tg && tg.ready) { tg.ready(); tg.expand(); }
         const WORKER = "https://journal-proxy.geisercasanova.workers.dev/";
         let ultimaBusqueda = "";
+        let currentJournals = [];
 
         async function buscar() {
             const q = document.getElementById('query').value.trim();
@@ -51,12 +63,10 @@
             ultimaBusqueda = q;
             const results = document.getElementById('results');
             results.innerHTML = '<div style="text-align:center; padding:20px;">Buscando revistas...</div>';
-            
             try {
-                // Tomamos solo las primeras palabras del abstract para no sobrecargar
-                const shortQuery = q.split(' ').slice(0, 6).join(' ');
-                const r = await fetch(WORKER + "?q=" + encodeURIComponent(shortQuery));
+                const r = await fetch(WORKER + "?q=" + encodeURIComponent(q));
                 const data = await r.json();
+                currentJournals = data;
                 render(data);
             } catch (e) {
                 results.innerHTML = '<div style="text-align:center;">Error: ' + e.message + '</div>';
@@ -66,37 +76,67 @@
         function render(journals) {
             const results = document.getElementById('results');
             if (!journals.length) {
-                results.innerHTML = '<div style="text-align:center; padding:20px;">No se encontraron revistas para ese tema.</div>';
+                results.innerHTML = '<div style="text-align:center; padding:20px;">No se encontraron revistas.</div>';
                 return;
             }
-
             results.innerHTML = journals.map((j, idx) => {
                 let metrics = '';
                 if (j.impact_factor) metrics += `<span class="tag tag-if">IF: ${j.impact_factor.toFixed(2)}</span>`;
                 if (j.h_index) metrics += `<span class="tag tag-if">h-index: ${j.h_index}</span>`;
                 if (j.is_oa) metrics += `<span class="tag tag-oa">Open Access</span>`;
-                if (j.apc && j.apc !== "No reportado" && j.apc !== "Sin APC") metrics += `<span class="tag tag-apc">APC: ${j.apc}</span>`;
-
-                const safeJournal = encodeURIComponent(JSON.stringify(j));
+                if (j.apc && j.apc !== "No reportado") metrics += `<span class="tag tag-apc">APC: ${j.apc}</span>`;
 
                 return `<div class="card">
                     <div class="title">${j.name}</div>
                     <div class="meta">${j.publisher || 'Editorial no reportada'} · ISSN: ${j.issn || 'N/A'}</div>
                     <div class="metrics">${metrics}</div>
+                    
+                    <div class="status-row">
+                        <span style="font-size:0.8rem; color:#94a3b8;">Estado de envío:</span>
+                        <select id="status-${idx}">
+                            <option value="pending">Pendiente</option>
+                            <option value="submitted">Enviado</option>
+                            <option value="under_review">En revisión</option>
+                            <option value="accepted">Aceptado</option>
+                            <option value="rejected">Rechazado</option>
+                        </select>
+                    </div>
+
                     <div class="actions">
-                        <button class="btn-save" onclick="guardar('${safeJournal}')">💾 Guardar en Obsidian</button>
-                        ${j.url ? `<a href="${j.url}" target="_blank" class="btn-visit">🌐 Visitar</a>` : ''}
+                        <button class="btn btn-ai" onclick="enviarIA(${idx}, 'cover_letter')">✉️ Cover Letter</button>
+                        <button class="btn btn-scope" onclick="enviarIA(${idx}, 'scope_match')">🎯 Scope Match</button>
+                    </div>
+                    <div class="actions">
+                        <button class="btn btn-save" onclick="guardar(${idx})">💾 Guardar en Obsidian</button>
+                        ${j.url ? `<a href="${j.url}" target="_blank" class="btn btn-visit">🌐 Visitar</a>` : ''}
                     </div>
                 </div>`;
             }).join('');
         }
 
-        function guardar(encoded) {
+        function enviarIA(idx, mode) {
+            const paper = document.getElementById('my-paper').value.trim();
+            if (!paper) { alert("Pega primero el título o abstract de tu artículo en el campo de arriba."); return; }
             if (!tg || !tg.sendData) { alert("Abre desde Telegram"); return; }
-            const j = JSON.parse(decodeURIComponent(encoded));
+            const j = currentJournals[idx];
+            
+            tg.sendData(JSON.stringify({
+                action: "journal_ai_tool",
+                mode: mode,
+                paper_text: paper,
+                journal_name: j.name
+            }));
+        }
+
+        function guardar(idx) {
+            if (!tg || !tg.sendData) { alert("Abre desde Telegram"); return; }
+            const j = currentJournals[idx];
+            const status = document.getElementById('status-' + idx).value;
+            
             tg.sendData(JSON.stringify({
                 action: "journal_to_note",
                 search_query: ultimaBusqueda,
+                status: status,
                 name: j.name,
                 issn: j.issn,
                 publisher: j.publisher,
