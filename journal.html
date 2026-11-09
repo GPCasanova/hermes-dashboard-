@@ -43,10 +43,12 @@
         const tg = window.Telegram.WebApp;
         if (tg && tg.ready) { tg.ready(); tg.expand(); }
         const WORKER = "https://journal-proxy.geisercasanova.workers.dev/";
+        let ultimaBusqueda = "";
 
         async function buscar() {
             const q = document.getElementById('query').value.trim();
             if (!q) return;
+            ultimaBusqueda = q;
             const results = document.getElementById('results');
             results.innerHTML = '<div style="text-align:center; padding:20px;">Buscando revistas...</div>';
             
@@ -94,6 +96,7 @@
             const j = JSON.parse(decodeURIComponent(encoded));
             tg.sendData(JSON.stringify({
                 action: "journal_to_note",
+                search_query: ultimaBusqueda,
                 name: j.name,
                 issn: j.issn,
                 publisher: j.publisher,
