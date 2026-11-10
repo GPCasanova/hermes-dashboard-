@@ -72,7 +72,9 @@
             <span class="filter-chip" data-filter="oa" onclick="toggleFilter(this)">Open Access</span>
             <span class="filter-chip" data-filter="recent" onclick="toggleFilter(this)">Últimos 5 años</span>
             <span class="filter-chip" data-filter="cited" onclick="toggleFilter(this)">Más citados</span>
-            <button class="filter-chip" onclick="exportarBibtex()" style="background: #3b82f6; color: white; border: none; cursor: pointer;">📚 Exportar BibTeX</button>
+        </div>
+        <div style="max-width: 800px; margin: 8px auto 0; display: flex; justify-content: flex-end;">
+            <button onclick="exportarBibtex()" style="background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: 600; cursor: pointer; font-size: 0.85rem;">📚 Exportar BibTeX</button>
         </div>
     </header>
     <div class="container" id="results">
@@ -169,9 +171,19 @@
         function exportarBibtex() {
             if (!currentPapers || currentPapers.length === 0) { alert("Primero haz una búsqueda."); return; }
             if (!tg || !tg.sendData) { alert("Abre desde Telegram"); return; }
+            
+            // Crear un payload ligero (solo lo necesario para BibTeX) para evitar el límite de 4096 bytes
+            const papersLigeros = currentPapers.map(p => ({
+                title: p.title,
+                authors: p.authors,
+                year: p.year,
+                venue: p.venue,
+                doi: p.doi
+            }));
+            
             tg.sendData(JSON.stringify({
                 action: "scholar_export_bibtex",
-                papers: currentPapers
+                papers: papersLigeros
             }));
         }
 
