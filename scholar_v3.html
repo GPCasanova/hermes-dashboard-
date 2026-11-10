@@ -14,8 +14,8 @@
         h1 { font-size: 1.25rem; font-weight: 700; }
         .badge-count { font-size: 0.75rem; background: var(--surface); border: 1px solid var(--border); padding: 4px 10px; border-radius: 20px; color: var(--text-muted); }
         
-        .tabs { display: flex; gap: 8px; max-width: 800px; margin: 0 auto 12px; overflow-x: auto; padding-bottom: 4px; }
-        .tab-btn { flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); padding: 10px; border-radius: 10px; font-weight: 600; font-size: 0.85rem; cursor: pointer; white-space: nowrap; transition: 0.2s; }
+        .tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; max-width: 800px; margin: 0 auto 12px; }
+        .tab-btn { flex: 1 1 30%; background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); padding: 8px; border-radius: 10px; font-weight: 600; font-size: 0.8rem; cursor: pointer; text-align: center; transition: 0.2s; }
         .tab-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
 
         .search-row { display: flex; gap: 8px; max-width: 800px; margin: 0 auto; }
@@ -160,8 +160,9 @@
                 } else if (currentSource === 'journals') {
                     const r = await fetch("https://journal-proxy.geisercasanova.workers.dev/?q=" + encodeURIComponent(q));
                     const journals = await r.json();
-                    // Adaptar el formato de revistas al formato de papers para reusar el render
                     papers = journals.map(j => ({
+                        ...j, // Preservar datos originales (name, issn, impact_factor, etc.)
+                        is_journal: true,
                         title: j.name,
                         authors: j.publisher || "Editorial no reportada",
                         year: "ISSN: " + (j.issn || "N/A"),
@@ -301,14 +302,30 @@
             const p = currentPapers[idx];
             if (!p) return;
             if (tg && tg.sendData) {
-                tg.sendData(JSON.stringify({
-                    action: "doi_to_note",
-                    title: p.title,
-                    authors: p.authors,
-                    year: p.year,
-                    venue: p.venue,
-                    doi: p.doi
-                }));
+                if (p.is_journal) {
+                    tg.sendData(JSON.stringify({
+                        action: "journal_to_note",
+                        search_query: document.getElementById('query').value.trim(),
+                        status: "pending",
+                        name: p.name,
+                        issn: p.issn,
+                        publisher: p.publisher,
+                        impact_factor: p.impact_factor,
+                        h_index: p.h_index,
+                        apc: p.apc,
+                        review_time: p.review_time,
+                        url: p.url
+                    }));
+                } else {
+                    tg.sendData(JSON.stringify({
+                        action: "doi_to_note",
+                        title: p.title,
+                        authors: p.authors,
+                        year: p.year,
+                        venue: p.venue,
+                        doi: p.doi
+                    }));
+                }
             } else alert("Abre desde Telegram para guardar.");
         }
     </script>
