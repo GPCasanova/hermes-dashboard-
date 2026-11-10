@@ -72,6 +72,7 @@
             <span class="filter-chip" data-filter="oa" onclick="toggleFilter(this)">Open Access</span>
             <span class="filter-chip" data-filter="recent" onclick="toggleFilter(this)">Últimos 5 años</span>
             <span class="filter-chip" data-filter="cited" onclick="toggleFilter(this)">Más citados</span>
+            <button class="filter-chip" onclick="exportarBibtex()" style="background: #3b82f6; color: white; border: none; cursor: pointer;">📚 Exportar BibTeX</button>
         </div>
     </header>
     <div class="container" id="results">
@@ -163,6 +164,15 @@
                 results.innerHTML = '<div class="empty-state">Error: ' + e.message + '</div>';
                 document.getElementById('count').textContent = "error";
             }
+        }
+
+        function exportarBibtex() {
+            if (!currentPapers || currentPapers.length === 0) { alert("Primero haz una búsqueda."); return; }
+            if (!tg || !tg.sendData) { alert("Abre desde Telegram"); return; }
+            tg.sendData(JSON.stringify({
+                action: "scholar_export_bibtex",
+                papers: currentPapers
+            }));
         }
 
         function render(papers) {
