@@ -170,12 +170,14 @@
 
         function exportarBibtex() {
             if (!currentPapers || currentPapers.length === 0) { alert("Primero haz una búsqueda."); return; }
+            alert("Exportando los primeros 10 papers a BibTeX...");
             if (!tg || !tg.sendData) { alert("Abre desde Telegram"); return; }
             
             // Crear un payload ligero (solo lo necesario para BibTeX) para evitar el límite de 4096 bytes
-            const papersLigeros = currentPapers.map(p => ({
+            // Tomamos solo los primeros 10 papers para no exceder el límite de 4096 bytes de Telegram
+            const papersLigeros = currentPapers.slice(0, 10).map(p => ({
                 title: p.title,
-                authors: p.authors,
+                authors: p.authors ? p.authors.substring(0, 100) : "", // Truncamos autores muy largos
                 year: p.year,
                 venue: p.venue,
                 doi: p.doi
