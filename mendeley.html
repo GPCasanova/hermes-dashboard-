@@ -13,9 +13,11 @@
         .header-top { display: flex; justify-content: space-between; align-items: center; max-width: 800px; margin: 0 auto 12px; }
         h1 { font-size: 1.25rem; font-weight: 700; color: var(--accent); }
         .badge-count { font-size: 0.75rem; background: var(--surface); border: 1px solid var(--border); padding: 4px 10px; border-radius: 20px; color: var(--text-muted); }
-        .search-row { display: flex; gap: 8px; max-width: 800px; margin: 0 auto; }
+        .search-row { display: flex; gap: 8px; max-width: 800px; margin: 0 auto 8px; }
         .search-row input { flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 10px 16px; border-radius: 10px; font-size: 0.95rem; outline: none; }
         .search-row button { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; }
+        .folder-filter { max-width: 800px; margin: 0 auto; }
+        .folder-filter select { width: 100%; padding: 10px; border-radius: 10px; background: var(--surface); color: white; border: 1px solid var(--border); font-size: 0.9rem; outline: none; }
         .container { max-width: 800px; margin: 0 auto; padding: 16px; }
         .paper-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
         .paper-title { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 6px; line-height: 1.4; }
@@ -23,9 +25,11 @@
         .paper-abstract { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; max-height: 4.5em; overflow: hidden; transition: max-height 0.3s; }
         .paper-abstract.expanded { max-height: none; }
         .paper-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-        .btn { flex: 1; padding: 10px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; border: none; text-align: center; display: flex; justify-content: center; align-items: center; gap: 4px; }
+        .btn { flex: 1; padding: 10px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; border: none; text-align: center; display: flex; justify-content: center; align-items: center; gap: 4px; min-width: 100px;}
         .btn-bibtex { background: #64748b; color: white; }
         .btn-save { background: var(--accent); color: white; }
+        .btn-ai { background: #8b5cf6; color: white; }
+        .btn-pdf { background: #3b82f6; color: white; }
         .btn-expand { background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; }
         .empty-state { text-align: center; color: var(--text-muted); padding: 40px 20px; }
         .loading { text-align: center; color: var(--accent); padding: 40px; }
@@ -41,6 +45,11 @@
             <input type="text" id="query" placeholder="Buscar en tu biblioteca..." onkeydown="if(event.key==='Enter')buscar()">
             <button onclick="buscar()">🔍</button>
         </div>
+        <div class="folder-filter">
+            <select id="folder-select" onchange="buscar()">
+                <option value="">Todas las carpetas</option>
+            </select>
+        </div>
     </header>
     <div class="container" id="results">
         <div class="empty-state">Escribe un tema y pulsa buscar.</div>
@@ -53,15 +62,37 @@
         const WORKER = "https://mendeley-proxy.geisercasanova.workers.dev/";
         let currentPapers = [];
 
+        // Cargar carpetas al iniciar
+        async function cargarCarpetas() {
+            try {
+                const r = await fetch(WORKER + "?action=folders");
+                const folders = await r.json();
+                const select = document.getElementById('folder-select');
+                folders.forEach(f => {
+                    const opt = document.createElement('option');
+                    opt.value = f.id;
+                    opt.text = f.name;
+                    select.appendChild(opt);
+                });
+            } catch (e) { console.log("Error cargando carpetas", e); }
+        }
+        cargarCarpetas();
+
         async function buscar() {
             const q = document.getElementById('query').value.trim();
-            if (!q) return;
+            const folder = document.getElementById('folder-select').value;
+            if (!q && !folder) { alert("Escribe un tema o selecciona una carpeta"); return; }
+            
             const results = document.getElementById('results');
             results.innerHTML = '<div class="loading">Buscando en Mendeley...</div>';
             document.getElementById('count').textContent = "…";
 
             try {
-                const r = await fetch(WORKER + "?q=" + encodeURIComponent(q));
+                let url = WORKER + "?";
+                if (q) url += "q=" + encodeURIComponent(q) + "&";
+                if (folder) url += "folder=" + encodeURIComponent(folder);
+                
+                const r = await fetch(url);
                 if (!r.ok) throw new Error("Error en la API de Mendeley");
                 const data = await r.json();
                 currentPapers = data;
@@ -81,6 +112,7 @@
                 const abstract = p.abstract || "Sin resumen disponible.";
                 const safeId = 'abs-' + idx;
                 const bibtex = `@article{${p.doi ? p.doi.replace(/[^a-zA-Z0-9]/g, '') : 'mendeley' + idx},\n  title = {${p.title}},\n  author = {${p.authors}},\n  journal = {${p.venue}},\n  year = {${p.year}},\n  doi = {${p.doi}}\n}`;
+                const pdfBtn = p.url ? `<a href="${p.url}" target="_blank" class="btn btn-pdf" style="text-decoration:none;">📄 DOI</a>` : '';
 
                 return `<div class="paper-card">
                     <div class="paper-title">${p.title}</div>
@@ -88,6 +120,8 @@
                     ${abstract !== "Sin resumen disponible." ? `<div class="paper-abstract" id="${safeId}">${abstract.slice(0, 400)}...</div>` : ""}
                     <div class="paper-actions">
                         ${abstract !== "Sin resumen disponible." ? `<button class="btn-expand" onclick="document.getElementById('${safeId}').classList.toggle('expanded')">Ver más</button>` : ""}
+                        <button class="btn btn-ai" onclick="resumir(${idx})">✨ Resumir</button>
+                        ${pdfBtn}
                         <button class="btn btn-bibtex" onclick="copiarBibtex('${encodeURIComponent(bibtex)}')">📋 BibTeX</button>
                         <button class="btn btn-save" onclick="guardarEnObsidian(${idx})">📥 Guardar</button>
                     </div>
@@ -95,11 +129,16 @@
             }).join("");
         }
 
+        function resumir(idx) {
+            if (!tg || !tg.sendData) { alert("Abre desde Telegram"); return; }
+            const p = currentPapers[idx];
+            if (!p.abstract || p.abstract === "Sin resumen disponible.") { alert("Este paper no tiene abstract."); return; }
+            tg.sendData(JSON.stringify({ action: "mendeley_summarize", title: p.title, abstract: p.abstract }));
+        }
+
         function copiarBibtex(encoded) {
-            const bibtex = decodeURIComponent(encoded);
-            navigator.clipboard.writeText(bibtex).then(() => {
-                if (tg) { tg.showAlert("✅ BibTeX copiado al portapapeles"); }
-                else { alert("✅ BibTeX copiado."); }
+            navigator.clipboard.writeText(decodeURIComponent(encoded)).then(() => {
+                if (tg) { tg.showAlert("✅ BibTeX copiado"); } else { alert("✅ Copiado"); }
             });
         }
 
@@ -108,11 +147,7 @@
             const p = currentPapers[idx];
             tg.sendData(JSON.stringify({
                 action: "doi_to_note",
-                title: p.title,
-                authors: p.authors,
-                year: p.year,
-                venue: p.venue,
-                doi: p.doi
+                title: p.title, authors: p.authors, year: p.year, venue: p.venue, doi: p.doi
             }));
         }
     </script>
