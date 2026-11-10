@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Asistente de Escritura</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root { --bg: #0f172a; --surface: #1e293b; --text: #f8fafc; --text-muted: #94a3b8; --accent: #8b5cf6; --border: #334155; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+        header { padding: 16px; border-bottom: 1px solid var(--border); background: rgba(15, 23, 42, 0.95); text-align: center; }
+        h1 { font-size: 1.25rem; font-weight: 700; color: var(--accent); }
+        .container { flex: 1; padding: 16px; display: flex; flex-direction: column; max-width: 800px; margin: 0 auto; width: 100%; gap: 16px; }
+        textarea { flex: 1; min-height: 200px; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 16px; border-radius: 12px; font-size: 0.95rem; font-family: inherit; line-height: 1.5; outline: none; resize: none; }
+        textarea:focus { border-color: var(--accent); }
+        
+        /* GRID DE 2 COLUMNAS PARA LOS BOTONES */
+        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn { padding: 12px 8px; border: none; border-radius: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer; color: white; display: flex; justify-content: center; align-items: center; text-align: center; transition: 0.2s; font-family: inherit; }
+        .btn:active { opacity: 0.8; }
+        
+        .btn-improve { background: #10b981; }
+        .btn-translate { background: #3b82f6; }
+        .btn-outline { background: #f59e0b; }
+        .btn-review { background: #ef4444; }
+        .btn-titles { background: #06b6d4; }
+        
+        .btn-abstract { background: #8b5cf6; }
+        .btn-cover { background: #ec4899; }
+        .btn-reply { background: #14b8a6; }
+        .btn-keywords { background: #6366f1; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>✍️ Asistente de Producción Científica</h1>
+    </header>
+    <div class="container">
+        <textarea id="text-input" placeholder="Pega aquí tu texto. Si quieres referencias, incluye los nombres de los autores o DOIs que conoces..."></textarea>
+        <div class="actions">
+            <button class="btn btn-improve" onclick="enviar('improve')">✨ Mejorar</button>
+            <button class="btn btn-translate" onclick="enviar('translate')">🇬🇧 Traducir</button>
+            <button class="btn btn-outline" onclick="enviar('outline')">📝 Esquema</button>
+            <button class="btn btn-review" onclick="enviar('peer_review')">🕵️ Peer Review</button>
+            <button class="btn btn-titles" onclick="enviar('titles')">💡 Títulos</button>
+            <button class="btn btn-abstract" onclick="enviar('abstract')">📄 Abstract</button>
+            <button class="btn btn-cover" onclick="enviar('cover_letter')">✉️ Cover Letter</button>
+            <button class="btn btn-reply" onclick="enviar('review_reply')">💬 Responder Revisor</button>
+            <button class="btn btn-keywords" onclick="enviar('keywords')">🔑 Keywords</button>
+            <button class="btn btn-paraphrase" onclick="enviar('paraphrase')" style="background: #14b8a6;">🔀 Parafrasear</button>
+            <div style="grid-column: span 2; margin-bottom: 4px;">
+                <select id="article-type" onchange="toggleSysRevOptions()" style="width: 100%; padding: 12px; border-radius: 10px; background: var(--surface); color: white; border: 1px solid var(--border); font-family: inherit; font-size: 0.9rem;">
+                    <option value="original">Artículo Original (IMRyD)</option>
+                    <option value="systematic_review">Revisión Sistemática (PRISMA)</option>
+                    <option value="case_report">Reporte de Caso Clínico</option>
+                    <option value="editorial">Editorial / Opinión</option>
+                    <option value="protocol">Protocolo de Investigación</option>
+                </select>
+            </div>
+            <div id="sysrev-options" style="grid-column: span 2; display: none; gap: 10px; margin-bottom: 4px;">
+                <select id="report-guide" style="width: 100%; padding: 12px; border-radius: 10px; background: var(--surface); color: white; border: 1px solid var(--border); font-family: inherit; font-size: 0.9rem; margin-bottom: 6px;">
+                    <option value="PRISMA 2020">Guía de Reporte: PRISMA 2020</option>
+                    <option value="PRISMA-ScR">Guía de Reporte: PRISMA-ScR (Scoping)</option>
+                    <option value="MOOSE">Guía de Reporte: MOOSE (Observacional)</option>
+                    <option value="ENTREQ">Guía de Reporte: ENTREQ (Cualitativa)</option>
+                </select>
+                <select id="review-method" style="width: 100%; padding: 12px; border-radius: 10px; background: var(--surface); color: white; border: 1px solid var(--border); font-family: inherit; font-size: 0.9rem; margin-bottom: 6px;">
+                    <option value="Cochrane Handbook">Metodología: Cochrane Handbook</option>
+                    <option value="JBI (Joanna Briggs Institute)">Metodología: JBI</option>
+                    <option value="Campbell Collaboration">Metodología: Campbell Collaboration</option>
+                </select>
+                <textarea id="picos-question" placeholder="Pregunta PICOS (opcional): Ej. En pacientes adultos con sepsis (P), el ML (I) vs scores clínicos (C), mejora la detección (O) en cohortes (S)" style="width: 100%; padding: 12px; border-radius: 10px; background: var(--surface); color: white; border: 1px solid var(--border); font-family: inherit; font-size: 0.85rem; min-height: 60px; resize: vertical; margin-bottom: 6px;"></textarea>
+                <label style="display: flex; align-items: center; gap: 8px; color: white; font-size: 0.9rem; padding: 8px; background: var(--surface); border-radius: 10px; border: 1px solid var(--border);">
+                    <input type="checkbox" id="include-grade" style="width: 20px; height: 20px;">
+                    Incluir tabla GRADE de certeza de evidencia
+                </label>
+            </div>
+            <button class="btn btn-article" onclick="enviar('full_article')" style="grid-column: span 2; background: #f97316;">📄 Generar Artículo Completo</button>
+        </div>
+    </div>
+    <script>
+        const tg = window.Telegram.WebApp;
+        if (tg && tg.ready) { tg.ready(); tg.expand(); }
+        function toggleSysRevOptions() {
+            const type = document.getElementById('article-type').value;
+            const sysrevDiv = document.getElementById('sysrev-options');
+            if (type === 'systematic_review') {
+                sysrevDiv.style.display = 'flex';
+                sysrevDiv.style.flexDirection = 'column';
+            } else {
+                sysrevDiv.style.display = 'none';
+            }
+        }
+
+        function enviar(mode) {
+            const text = document.getElementById('text-input').value.trim();
+            if (!text) { alert("Pega un texto primero"); return; }
+            if (!tg || !tg.sendData) { alert("Abre desde Telegram para usar esta función"); return; }
+            
+            let payload = { action: "ai_writer", mode: mode, text: text };
+            if (mode === 'full_article') {
+                payload.article_type = document.getElementById('article-type').value;
+                if (payload.article_type === 'systematic_review') {
+                    payload.report_guideline = document.getElementById('report-guide').value;
+                    payload.review_methodology = document.getElementById('review-method').value;
+                    payload.picos_question = document.getElementById('picos-question').value.trim();
+                    payload.include_grade = document.getElementById('include-grade').checked;
+                }
+            }
+            tg.sendData(JSON.stringify(payload));
+        }
+    </script>
+</body>
+</html>
