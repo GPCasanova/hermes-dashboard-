@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mi Mendeley</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root { --bg: #0f172a; --surface: #1e293b; --text: #f8fafc; --text-muted: #94a3b8; --accent: #c80022; --border: #334155; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        header { position: sticky; top: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); z-index: 100; border-bottom: 1px solid var(--border); padding: 16px; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; max-width: 800px; margin: 0 auto 12px; }
+        h1 { font-size: 1.25rem; font-weight: 700; color: var(--accent); }
+        .badge-count { font-size: 0.75rem; background: var(--surface); border: 1px solid var(--border); padding: 4px 10px; border-radius: 20px; color: var(--text-muted); }
+        .search-row { display: flex; gap: 8px; max-width: 800px; margin: 0 auto; }
+        .search-row input { flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 10px 16px; border-radius: 10px; font-size: 0.95rem; outline: none; }
+        .search-row button { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; }
+        .container { max-width: 800px; margin: 0 auto; padding: 16px; }
+        .paper-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+        .paper-title { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 6px; line-height: 1.4; }
+        .paper-meta { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; }
+        .paper-abstract { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; max-height: 4.5em; overflow: hidden; transition: max-height 0.3s; }
+        .paper-abstract.expanded { max-height: none; }
+        .paper-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+        .btn { flex: 1; padding: 10px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; border: none; text-align: center; display: flex; justify-content: center; align-items: center; gap: 4px; }
+        .btn-bibtex { background: #64748b; color: white; }
+        .btn-save { background: var(--accent); color: white; }
+        .btn-expand { background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; }
+        .empty-state { text-align: center; color: var(--text-muted); padding: 40px 20px; }
+        .loading { text-align: center; color: var(--accent); padding: 40px; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-top">
+            <h1>📚 Mi Mendeley</h1>
+            <div class="badge-count" id="count">—</div>
+        </div>
+        <div class="search-row">
+            <input type="text" id="query" placeholder="Buscar en tu biblioteca..." onkeydown="if(event.key==='Enter')buscar()">
+            <button onclick="buscar()">🔍</button>
+        </div>
+    </header>
+    <div class="container" id="results">
+        <div class="empty-state">Escribe un tema y pulsa buscar.</div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        if (tg && tg.ready) { tg.ready(); tg.expand(); }
+        
+        const WORKER = "https://mendeley-proxy.geisercasanova.workers.dev/";
+        let currentPapers = [];
+
+        async function buscar() {
+            const q = document.getElementById('query').value.trim();
+            if (!q) return;
+            const results = document.getElementById('results');
+            results.innerHTML = '<div class="loading">Buscando en Mendeley...</div>';
+            document.getElementById('count').textContent = "…";
+
+            try {
+                const r = await fetch(WORKER + "?q=" + encodeURIComponent(q));
+                if (!r.ok) throw new Error("Error en la API de Mendeley");
+                const data = await r.json();
+                currentPapers = data;
+                render(data);
+            } catch (e) {
+                results.innerHTML = '<div class="empty-state">Error: ' + e.message + '</div>';
+                document.getElementById('count').textContent = "error";
+            }
+        }
+
+        function render(papers) {
+            const results = document.getElementById('results');
+            document.getElementById('count').textContent = papers.length + " docs";
+            if (!papers.length) { results.innerHTML = '<div class="empty-state">No se encontraron documentos.</div>'; return; }
+
+            results.innerHTML = papers.map((p, idx) => {
+                const abstract = p.abstract || "Sin resumen disponible.";
+                const safeId = 'abs-' + idx;
+                const bibtex = `@article{${p.doi ? p.doi.replace(/[^a-zA-Z0-9]/g, '') : 'mendeley' + idx},\n  title = {${p.title}},\n  author = {${p.authors}},\n  journal = {${p.venue}},\n  year = {${p.year}},\n  doi = {${p.doi}}\n}`;
+
+                return `<div class="paper-card">
+                    <div class="paper-title">${p.title}</div>
+                    <div class="paper-meta">${p.authors} · ${p.year} · ${p.venue}</div>
+                    ${abstract !== "Sin resumen disponible." ? `<div class="paper-abstract" id="${safeId}">${abstract.slice(0, 400)}...</div>` : ""}
+                    <div class="paper-actions">
+                        ${abstract !== "Sin resumen disponible." ? `<button class="btn-expand" onclick="document.getElementById('${safeId}').classList.toggle('expanded')">Ver más</button>` : ""}
+                        <button class="btn btn-bibtex" onclick="copiarBibtex('${encodeURIComponent(bibtex)}')">📋 BibTeX</button>
+                        <button class="btn btn-save" onclick="guardarEnObsidian(${idx})">📥 Guardar</button>
+                    </div>
+                </div>`;
+            }).join("");
+        }
+
+        function copiarBibtex(encoded) {
+            const bibtex = decodeURIComponent(encoded);
+            navigator.clipboard.writeText(bibtex).then(() => {
+                if (tg) { tg.showAlert("✅ BibTeX copiado al portapapeles"); }
+                else { alert("✅ BibTeX copiado."); }
+            });
+        }
+
+        function guardarEnObsidian(idx) {
+            if (!tg || !tg.sendData) { alert("Abre desde Telegram"); return; }
+            const p = currentPapers[idx];
+            tg.sendData(JSON.stringify({
+                action: "doi_to_note",
+                title: p.title,
+                authors: p.authors,
+                year: p.year,
+                venue: p.venue,
+                doi: p.doi
+            }));
+        }
+    </script>
+</body>
+</html>
