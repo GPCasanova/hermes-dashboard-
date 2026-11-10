@@ -63,6 +63,7 @@
             <button class="tab-btn" id="tab-pubmed" onclick="setTab('pubmed')">PubMed</button>
             <button class="tab-btn" id="tab-arxiv" onclick="setTab('arxiv')">arXiv</button>
             <button class="tab-btn" id="tab-europepmc" onclick="setTab('europepmc')">Europe PMC</button>
+            <button class="tab-btn" id="tab-journals" onclick="setTab('journals')">Revistas</button>
         </div>
         <div class="search-row">
             <input type="text" id="query" placeholder="Buscar papers, autores, temas..." onkeydown="if(event.key==='Enter')buscar()">
@@ -155,6 +156,19 @@
                         percentile: p.cited_by_percentile_year?.min || null,
                         is_oa: p.best_oa_location ? true : false,
                         pdf_url: p.best_oa_location?.pdf_url || null
+                    }));
+                } else if (currentSource === 'journals') {
+                    const r = await fetch("https://journal-proxy.geisercasanova.workers.dev/?q=" + encodeURIComponent(q));
+                    const journals = await r.json();
+                    // Adaptar el formato de revistas al formato de papers para reusar el render
+                    papers = journals.map(j => ({
+                        title: j.name,
+                        authors: j.publisher || "Editorial no reportada",
+                        year: "ISSN: " + (j.issn || "N/A"),
+                        venue: "IF: " + (j.impact_factor ? j.impact_factor.toFixed(2) : "N/A") + " | h-index: " + (j.h_index || "N/A"),
+                        doi: "",
+                        abstract: "Open Access: " + (j.is_oa ? "Sí" : "No") + " | APC: " + (j.apc || "No reportado"),
+                        url: j.url
                     }));
                 } else {
                     const r = await fetch(WORKER + "?source=" + currentSource + "&q=" + encodeURIComponent(q));
