@@ -50,9 +50,10 @@
                 <option value="">Todas las carpetas</option>
             </select>
         </div>
-        <div style="max-width: 800px; margin: 8px auto 0; display: flex; gap: 8px;">
+        <div style="max-width: 800px; margin: 8px auto 0; display: flex; gap: 8px; flex-wrap: wrap;">
             <button onclick="exportar('bibtex')" style="flex:1; background: #64748b; color:white; border:none; padding:8px; border-radius:8px; font-weight:600; cursor:pointer;">📚 Exportar .bib</button>
             <button onclick="exportar('csv')" style="flex:1; background: #10b981; color:white; border:none; padding:8px; border-radius:8px; font-weight:600; cursor:pointer;">📊 Exportar .csv</button>
+            <button onclick="sincronizar()" style="flex:1; background: #3b82f6; color:white; border:none; padding:8px; border-radius:8px; font-weight:600; cursor:pointer;">🔄 Sincronizar a Obsidian</button>
         </div>
     </header>
     <div class="container" id="results">
@@ -128,6 +129,7 @@
                         ${pdfBtn}
                         <button class="btn btn-bibtex" onclick="copiarBibtex('${encodeURIComponent(bibtex)}')">📋 BibTeX</button>
                         <button class="btn btn-save" onclick="guardarEnObsidian(${idx})">📥 Guardar</button>
+                        <button class="btn" onclick="limpiarMetadatos(${idx})" style="background: #f59e0b; color: white;">🪄 Limpiar</button>
                     </div>
                 </div>`;
             }).join("");
@@ -159,6 +161,26 @@
             tg.sendData(JSON.stringify({
                 action: "mendeley_export_" + tipo,
                 dois: dois
+            }));
+        }
+
+        function sincronizar() {
+            if (!tg || !tg.sendData) { alert("Abre desde Telegram"); return; }
+            const folder = document.getElementById('folder-select').value;
+            const folderName = document.getElementById('folder-select').options[document.getElementById('folder-select').selectedIndex].text;
+            if (confirm("¿Sincronizar toda la carpeta '" + folderName + "' a Obsidian? Esto creará las notas de todos los papers.")) {
+                tg.sendData(JSON.stringify({ action: "mendeley_sync", folder_id: folder, folder_name: folderName }));
+            }
+        }
+
+        function limpiarMetadatos(idx) {
+            if (!tg || !tg.sendData) { alert("Abre desde Telegram"); return; }
+            const p = currentPapers[idx];
+            tg.sendData(JSON.stringify({ 
+                action: "mendeley_fix_meta", 
+                doi: p.doi, 
+                title: p.title, 
+                mendeley_id: p.id 
             }));
         }
 
