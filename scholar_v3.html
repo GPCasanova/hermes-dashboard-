@@ -245,6 +245,30 @@
                     </div>
                 </div>`;
             }).join("");
+            marcarEnMendeley();
+        }
+
+        async function marcarEnMendeley() {
+            const dois = currentPapers.filter(p => p.doi).map(p => p.doi.replace('https://doi.org/', ''));
+            if (dois.length === 0) return;
+            try {
+                const r = await fetch(`https://mendeley-proxy.geisercasanova.workers.dev/?action=check_dois&dois=${encodeURIComponent(dois.join(','))}`);
+                const foundDois = await r.json();
+                foundDois.forEach(doi => {
+                    const cleanDoi = doi.replace('https://doi.org/', '');
+                    const idx = currentPapers.findIndex(p => p.doi && p.doi.includes(cleanDoi));
+                    if (idx !== -1) {
+                        const cards = document.querySelectorAll('.paper-card');
+                        if (cards[idx] && !cards[idx].querySelector('.mendeley-badge')) {
+                            const badge = document.createElement('span');
+                            badge.className = 'mendeley-badge';
+                            badge.style.cssText = 'background: #c80022; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-left: 8px; font-weight: 600; display: inline-block;';
+                            badge.textContent = '📚 En Mendeley';
+                            cards[idx].querySelector('.paper-title').appendChild(badge);
+                        }
+                    }
+                });
+            } catch (e) {}
         }
 
         // NUEVA FUNCIÓN BIBTEX
