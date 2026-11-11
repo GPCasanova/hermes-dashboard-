@@ -339,6 +339,9 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         title: p.title,
+                        authors: p.authors,
+                        year: p.year,
+                        venue: p.venue,
                         doi: p.doi
                     })
                 });
