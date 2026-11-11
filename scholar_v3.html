@@ -250,14 +250,20 @@
         }
 
         async function marcarEnMendeley() {
-            const dois = currentPapers.filter(p => p.doi).map(p => p.doi.replace('https://doi.org/', ''));
-            if (dois.length === 0) return;
+            const dois = currentPapers.filter(p => p.doi).map(p => p.doi.replace('https://doi.org/', '').trim());
+            const titles = currentPapers.filter(p => !p.doi && p.title).map(p => p.title.trim());
+            if (dois.length === 0 && titles.length === 0) return;
+            
             try {
-                const r = await fetch(`https://mendeley-proxy.geisercasanova.workers.dev/?action=check_dois&dois=${encodeURIComponent(dois.join(','))}`);
-                const foundDois = await r.json();
-                foundDois.forEach(doi => {
-                    const cleanDoi = doi.replace('https://doi.org/', '');
-                    const idx = currentPapers.findIndex(p => p.doi && p.doi.includes(cleanDoi));
+                const url = `https://mendeley-proxy.geisercasanova.workers.dev/?action=check_dois&dois=${encodeURIComponent(dois.join('||'))}&titles=${encodeURIComponent(titles.join('||'))}`;
+                const r = await fetch(url);
+                const found = await r.json();
+                
+                found.forEach(identifier => {
+                    const idx = currentPapers.findIndex(p => 
+                        (p.doi && p.doi.includes(identifier)) || 
+                        (p.title && p.title.toLowerCase().includes(identifier.toLowerCase().substring(0, 20)))
+                    );
                     if (idx !== -1) {
                         const cards = document.querySelectorAll('.paper-card');
                         if (cards[idx] && !cards[idx].querySelector('.mendeley-badge')) {
@@ -327,7 +333,6 @@
             const p = currentPapers[idx];
             if (!p) return;
             
-            // Feedback visual inmediato
             const btn = event.target;
             const originalText = btn.innerText;
             btn.innerText = "⏳...";
