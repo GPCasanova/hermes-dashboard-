@@ -50,6 +50,10 @@
                 <option value="">Todas las carpetas</option>
             </select>
         </div>
+        <div style="max-width: 800px; margin: 8px auto 0; display: flex; gap: 8px;">
+            <button onclick="exportar('bibtex')" style="flex:1; background: #64748b; color:white; border:none; padding:8px; border-radius:8px; font-weight:600; cursor:pointer;">📚 Exportar .bib</button>
+            <button onclick="exportar('csv')" style="flex:1; background: #10b981; color:white; border:none; padding:8px; border-radius:8px; font-weight:600; cursor:pointer;">📊 Exportar .csv</button>
+        </div>
     </header>
     <div class="container" id="results">
         <div class="empty-state">Escribe un tema y pulsa buscar.</div>
@@ -140,6 +144,15 @@
             navigator.clipboard.writeText(decodeURIComponent(encoded)).then(() => {
                 if (tg) { tg.showAlert("✅ BibTeX copiado"); } else { alert("✅ Copiado"); }
             });
+        }
+
+        function exportar(tipo) {
+            if (!currentPapers || currentPapers.length === 0) { alert("Primero haz una búsqueda."); return; }
+            if (!tg || !tg.sendData) { alert("Abre desde Telegram"); return; }
+            tg.sendData(JSON.stringify({
+                action: "mendeley_export_" + tipo,
+                papers: currentPapers.map(p => ({ title: p.title, authors: p.authors, year: p.year, venue: p.venue, doi: p.doi }))
+            }));
         }
 
         function guardarEnObsidian(idx) {
