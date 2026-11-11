@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hermes Scholar</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root { --bg: #0f172a; --surface: #1e293b; --text: #f8fafc; --text-muted: #94a3b8; --accent: #10b981; --border: #334155; --yellow: #fbbf24; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        header { position: sticky; top: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); z-index: 100; border-bottom: 1px solid var(--border); padding: 16px; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; max-width: 800px; margin: 0 auto 12px; }
+        h1 { font-size: 1.25rem; font-weight: 700; }
+        .badge-count { font-size: 0.75rem; background: var(--surface); border: 1px solid var(--border); padding: 4px 10px; border-radius: 20px; color: var(--text-muted); }
+        
+        .tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; max-width: 800px; margin: 0 auto 12px; }
+        .tab-btn { flex: 1 1 30%; background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); padding: 8px; border-radius: 10px; font-weight: 600; font-size: 0.8rem; cursor: pointer; text-align: center; transition: 0.2s; }
+        .tab-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+        .search-row { display: flex; gap: 8px; max-width: 800px; margin: 0 auto; }
+        .search-row input { flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 10px 16px; border-radius: 10px; font-size: 0.95rem; outline: none; }
+        .search-row button { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; }
+        
+        .filters { display: flex; gap: 8px; max-width: 800px; margin: 12px auto 0; overflow-x: auto; }
+        .filter-chip { background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; white-space: nowrap; }
+        .filter-chip.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+        .container { max-width: 800px; margin: 0 auto; padding: 16px; }
+        .paper-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+        .paper-title { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 6px; line-height: 1.4; }
+        .paper-meta { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; }
+        
+        /* NUEVAS CLASES PARA MÉTRICAS */
+        .paper-metrics { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; font-size: 0.75rem; }
+        .metric-tag { background: rgba(251, 191, 36, 0.15); color: var(--yellow); border: 1px solid var(--yellow); padding: 2px 8px; border-radius: 12px; font-weight: 600; }
+        .metric-tag.oa { background: rgba(16, 185, 129, 0.15); color: var(--accent); border-color: var(--accent); }
+
+        .paper-abstract { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; max-height: 4.5em; overflow: hidden; transition: max-height 0.3s; }
+        .paper-abstract.expanded { max-height: none; }
+        
+        .paper-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+        .btn { flex: 1; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; min-width: 100px; text-align: center; text-decoration: none; font-size: 0.85rem; font-family: inherit; display: flex; justify-content: center; align-items: center; gap: 4px;}
+        .btn-save { background: var(--accent); color: white; border: none; }
+        .btn-digest { background: #8b5cf6; color: white; border: none; }
+        .btn-related { background: #f59e0b; color: white; border: none; }
+        .btn-pdf { background: #ef4444; color: white; border: none; }
+        .btn-bibtex { background: #64748b; color: white; border: none; }
+        .btn-expand { background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; }
+        
+        .empty-state { text-align: center; color: var(--text-muted); padding: 40px 20px; }
+        .loading { text-align: center; color: var(--text-muted); padding: 40px; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-top">
+            <h1>🔬 Buscador Multifuente</h1>
+            <div class="badge-count" id="count">—</div>
+        </div>
+        <div class="tabs">
+            <button class="tab-btn active" id="tab-openalex" onclick="setTab('openalex')">OpenAlex</button>
+            <button class="tab-btn" id="tab-pubmed" onclick="setTab('pubmed')">PubMed</button>
+            <button class="tab-btn" id="tab-arxiv" onclick="setTab('arxiv')">arXiv</button>
+            <button class="tab-btn" id="tab-europepmc" onclick="setTab('europepmc')">Europe PMC</button>
+            <button class="tab-btn" id="tab-journals" onclick="setTab('journals')">Revistas</button>
+        </div>
+        <div class="search-row">
+            <input type="text" id="query" placeholder="Buscar papers, autores, temas..." onkeydown="if(event.key==='Enter')buscar()">
+            <button onclick="buscar()">🔍</button>
+        </div>
+        <div class="filters" id="filters">
+            <span class="filter-chip" data-filter="oa" onclick="toggleFilter(this)">Open Access</span>
+            <span class="filter-chip" data-filter="recent" onclick="toggleFilter(this)">Últimos 5 años</span>
+            <span class="filter-chip" data-filter="cited" onclick="toggleFilter(this)">Más citados</span>
+        </div>
+        <div style="max-width: 800px; margin: 8px auto 0; display: flex; justify-content: flex-end;">
+            <button onclick="exportarBibtex()" style="background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: 600; cursor: pointer; font-size: 0.85rem;">📚 Exportar BibTeX</button>
+        </div>
+    </header>
+    <div class="container" id="results">
+        <div class="empty-state">Escribe un tema y pulsa buscar.</div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        if (tg && tg.ready) { tg.ready(); tg.expand(); }
+        
+        const WORKER = "https://scholar-proxy.geisercasanova.workers.dev/";
+        let currentSource = 'openalex';
+        let activeFilters = new Set();
+        let currentPapers = [];
+
+        function setTab(source) {
+            currentSource = source;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('tab-' + source).classList.add('active');
+            
+            // Ocultar filtros para fuentes que no son OpenAlex
+            const filtersDiv = document.getElementById('filters');
+            if (source === 'openalex') {
+                filtersDiv.style.display = 'flex';
+            } else {
+                filtersDiv.style.display = 'none';
+            }
+        }
+
+        function toggleFilter(el) {
+            const f = el.dataset.filter;
+            if (activeFilters.has(f)) { activeFilters.delete(f); el.classList.remove("active"); }
+            else { activeFilters.add(f); el.classList.add("active"); }
+        }
+
+        function reconstructAbstract(inv) {
+            if (!inv) return "";
+            const words = [];
+            for (const [word, positions] of Object.entries(inv)) {
+                positions.forEach(p => words[p] = word);
+            }
+            return words.filter(Boolean).join(" ");
+        }
+
+        async function buscar() {
+            const q = document.getElementById('query').value.trim();
+            if (!q) return;
+            const results = document.getElementById('results');
+            results.innerHTML = '<div class="loading">Buscando en ' + currentSource + '...</div>';
+            document.getElementById('count').textContent = "…";
+
+            try {
+                let papers = [];
+                if (currentSource === 'openalex') {
+                    let filters = [];
+                    if (activeFilters.has("oa")) filters.push("is_oa:true");
+                    if (activeFilters.has("recent")) filters.push("publication_year:>" + (new Date().getFullYear() - 5));
+                    let sort = activeFilters.has("cited") ? "cited_by_count:desc" : "relevance_score:desc";
+                    
+                    // MÉTRICAS AÑADIDAS AL SELECT
+                    let url = `https://api.openalex.org/works?search=${encodeURIComponent(q)}&select=id,doi,display_name,publication_year,cited_by_count,cited_by_percentile_year,authorships,primary_location,abstract_inverted_index,best_oa_location&per_page=50&mailto=geisercasanova@gmail.com`;
+                    if (filters.length) url += `&filter=${filters.join(',')}`;
+                    url += `&sort=${sort}`;
+
+                    const r = await fetch(url);
+                    const data = await r.json();
+                    papers = (data.results || []).map(p => ({
+                        id: p.id,
+                        title: p.display_name || "Sin título",
+                        authors: (p.authorships || []).map(a => a.author?.display_name).filter(Boolean).join(", "),
+                        year: p.publication_year || "",
+                        venue: p.primary_location?.source?.display_name || "",
+                        doi: p.doi || "",
+                        abstract: reconstructAbstract(p.abstract_inverted_index),
+                        url: p.doi ? `https://doi.org/${p.doi.replace('https://doi.org/', '')}` : "",
+                        // EXTRACCIÓN DE MÉTRICAS Y PDF
+                        if_proxy: p.primary_location?.source?.summary_stats?.['2yr_mean_citedness'] || null,
+                        percentile: p.cited_by_percentile_year?.min || null,
+                        is_oa: p.best_oa_location ? true : false,
+                        pdf_url: p.best_oa_location?.pdf_url || null
+                    }));
+                } else if (currentSource === 'journals') {
+                    const r = await fetch("https://journal-proxy.geisercasanova.workers.dev/?q=" + encodeURIComponent(q));
+                    const journals = await r.json();
+                    papers = journals.map(j => ({
+                        ...j, // Preservar datos originales (name, issn, impact_factor, etc.)
+                        is_journal: true,
+                        title: j.name,
+                        authors: j.publisher || "Editorial no reportada",
+                        year: "ISSN: " + (j.issn || "N/A"),
+                        venue: "IF: " + (j.impact_factor ? j.impact_factor.toFixed(2) : "N/A") + " | h-index: " + (j.h_index || "N/A"),
+                        doi: "",
+                        abstract: "Open Access: " + (j.is_oa ? "Sí" : "No") + " | APC: " + (j.apc || "No reportado"),
+                        url: j.url
+                    }));
+                } else {
+                    const r = await fetch(WORKER + "?source=" + currentSource + "&q=" + encodeURIComponent(q));
+                    papers = await r.json();
+                }
+                currentPapers = papers;
+                render(papers);
+            } catch (e) {
+                results.innerHTML = '<div class="empty-state">Error: ' + e.message + '</div>';
+                document.getElementById('count').textContent = "error";
+            }
+        }
+
+        function exportarBibtex() {
+            if (!currentPapers || currentPapers.length === 0) { alert("Primero haz una búsqueda."); return; }
+            alert("Exportando los primeros 10 papers a BibTeX...");
+            if (!tg || !tg.sendData) { alert("Abre desde Telegram"); return; }
+            
+            // Crear un payload ligero (solo lo necesario para BibTeX) para evitar el límite de 4096 bytes
+            // Tomamos solo los primeros 10 papers para no exceder el límite de 4096 bytes de Telegram
+            const papersLigeros = currentPapers.slice(0, 10).map(p => ({
+                title: p.title,
+                authors: p.authors ? p.authors.substring(0, 100) : "", // Truncamos autores muy largos
+                year: p.year,
+                venue: p.venue,
+                doi: p.doi
+            }));
+            
+            tg.sendData(JSON.stringify({
+                action: "scholar_export_bibtex",
+                papers: papersLigeros
+            }));
+        }
+
+        function render(papers) {
+            const results = document.getElementById('results');
+            document.getElementById('count').textContent = papers.length + " papers";
+            if (!papers.length) { results.innerHTML = '<div class="empty-state">Sin resultados.</div>'; return; }
+
+            results.innerHTML = papers.map((p, idx) => {
+                const abstract = p.abstract || "Sin resumen disponible.";
+                const safeId = 'abs-' + idx;
+                
+                let relatedBtn = currentSource === 'openalex' ? `<button class="btn btn-related" onclick="buscarRelacionados('${p.id}')">🔗 Relacionados</button>` : '';
+                let pdfBtn = p.pdf_url ? `<a href="${p.pdf_url}" target="_blank" class="btn btn-pdf">📄 PDF</a>` : '';
+                
+                // LÓGICA DE MÉTRICAS
+                let metricsHtml = '';
+                if (p.if_proxy) {
+                    metricsHtml += `<span class="metric-tag">IF: ${p.if_proxy.toFixed(2)}</span>`;
+                }
+                if (p.percentile) {
+                    metricsHtml += `<span class="metric-tag">Top ${100 - p.percentile}% citado</span>`;
+                }
+                if (p.is_oa) {
+                    metricsHtml += `<span class="metric-tag oa">Open Access</span>`;
+                }
+
+                return `<div class="paper-card" id="paper-${idx}">
+                    <div class="paper-title">${p.title}</div>
+                    <div class="paper-meta">${p.authors || "Autores desconocidos"} · ${p.year || "—"} · ${p.venue || "—"}</div>
+                    
+                    ${metricsHtml ? `<div class="paper-metrics">${metricsHtml}</div>` : ''}
+                    
+                    ${abstract !== "Sin resumen disponible." ? `<div class="paper-abstract" id="${safeId}">${abstract.slice(0, 400)}...</div>` : ""}
+                    <div class="paper-actions">
+                        ${abstract !== "Sin resumen disponible." ? `<button class="btn-expand" onclick="document.getElementById('${safeId}').classList.toggle('expanded')">Ver más</button>` : ""}
+                        <button class="btn btn-digest" onclick="resumirPaper('${idx}')">✨ Resumir</button>
+                        ${pdfBtn}
+                        ${relatedBtn}
+                        <button class="btn btn-bibtex" onclick="copiarBibtex(${idx})">📋 BibTeX</button>
+                        <button class="btn" onclick="guardarEnMendeley(${idx})" style="background: #c80022; color: white;">📚 A Mendeley</button>
+                        <button class="btn btn-save" onclick="guardarPaper(${idx})">📥 Guardar</button>
+                    </div>
+                </div>`;
+            }).join("");
+            marcarEnMendeley();
+        }
+
+        async function marcarEnMendeley() {
+            if (!currentPapers || currentPapers.length === 0) return;
+            
+            const papersData = currentPapers.map((p, idx) => ({
+                id: idx, doi: p.doi || "", title: p.title || ""
+            }));
+            
+            try {
+                const r = await fetch("https://mendeley-proxy.geisercasanova.workers.dev/?action=check_papers", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(papersData)
+                });
+                
+                if (!r.ok) return;
+                const foundIndices = await r.json();
+                
+                foundIndices.forEach(idx => {
+                    const card = document.getElementById('paper-' + idx);
+                    if (card) {
+                        // A) Pintar la etiqueta roja
+                        const titleDiv = card.querySelector('.paper-title');
+                        if (titleDiv && !card.querySelector('.mendeley-badge')) {
+                            const badge = document.createElement('span');
+                            badge.className = 'mendeley-badge';
+                            badge.style.cssText = 'background: #c80022; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-left: 8px; font-weight: 600; display: inline-block;';
+                            badge.textContent = '📚 En Mendeley';
+                            titleDiv.appendChild(badge);
+                        }
+                        
+                        // B) Cambiar el botón a verde (buscando por texto)
+                        const buttons = card.querySelectorAll('button');
+                        buttons.forEach(btn => {
+                            if (btn.innerText.includes('A Mendeley') || btn.innerText.includes('a Mendeley')) {
+                                btn.innerText = "✅ En Mendeley";
+                                btn.style.background = "#10b981";
+                                btn.disabled = true;
+                            }
+                        });
+                    }
+                });
+            } catch (e) {}
+        }
+
+        // NUEVA FUNCIÓN BIBTEX
+        function copiarBibtex(idx) {
+            const p = currentPapers[idx];
+            if (!p) return;
+            const autorApellido = p.authors ? p.authors.split(',')[0].replace(/\s/g, '') : 'Anon';
+            const bibtex = `@article{${autorApellido}${p.year},\n  title = {${p.title}},\n  author = {${p.authors}},\n  journal = {${p.venue}},\n  year = {${p.year}},\n  doi = {${p.doi}}\n}`;
+            
+            navigator.clipboard.writeText(bibtex).then(() => {
+                alert("✅ BibTeX copiado al portapapeles");
+            }).catch(err => {
+                alert("❌ Error al copiar. BibTeX:\n\n" + bibtex);
+            });
+        }
+
+        async function buscarRelacionados(paperId) {
+            const results = document.getElementById('results');
+            results.innerHTML = '<div class="loading">Buscando papers relacionados...</div>';
+            document.getElementById('count').textContent = "…";
+            try {
+                const cleanId = paperId.split('/').pop();
+                const r = await fetch(`https://api.openalex.org/works?filter=related_to:${cleanId}&per_page=50&mailto=geisercasanova@gmail.com`);
+                const data = await r.json();
+                const papers = (data.results || []).map(p => ({
+                    id: p.id,
+                    title: p.display_name || "Sin título",
+                    authors: (p.authorships || []).map(a => a.author?.display_name).filter(Boolean).join(", "),
+                    year: p.publication_year || "",
+                    venue: p.primary_location?.source?.display_name || "",
+                    doi: p.doi || "",
+                    abstract: reconstructAbstract(p.abstract_inverted_index),
+                    url: p.doi ? `https://doi.org/${p.doi.replace('https://doi.org/', '')}` : "",
+                    if_proxy: p.primary_location?.source?.summary_stats?.['2yr_mean_citedness'] || null,
+                    percentile: p.cited_by_percentile_year?.min || null,
+                    is_oa: p.best_oa_location ? true : false,
+                    pdf_url: p.best_oa_location?.pdf_url || null
+                }));
+                currentPapers = papers;
+                render(papers);
+            } catch (e) {
+                results.innerHTML = '<div class="empty-state">Error: ' + e.message + '</div>';
+            }
+        }
+
+        function resumirPaper(idx) {
+            const p = currentPapers[idx];
+            if (!p || !p.abstract) { alert("No hay abstract para resumir"); return; }
+            if (tg && tg.sendData) {
+                tg.sendData(JSON.stringify({ action: "scholar_digest", title: p.title, abstract: p.abstract }));
+            } else alert("Abre desde Telegram para usar esta función");
+        }
+
+        async function guardarEnMendeley(idx) {
+            const p = currentPapers[idx];
+            if (!p) return;
+            
+            const btn = event.target;
+            const originalText = btn.innerText;
+            btn.innerText = "⏳...";
+            btn.disabled = true;
+
+            try {
+                const r = await fetch("https://mendeley-proxy.geisercasanova.workers.dev/?action=add", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        title: p.title,
+                        authors: p.authors,
+                        year: p.year,
+                        venue: p.venue,
+                        doi: p.doi
+                    })
+                });
+                
+                if (r.ok) {
+                    btn.innerText = "✅ En Mendeley";
+                    btn.style.background = "#10b981";
+                } else {
+                    const err = await r.json();
+                    alert("Error: " + (err.error || "No se pudo guardar"));
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                alert("Error de red: " + e.message);
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        function guardarPaper(idx) {
+            const p = currentPapers[idx];
+            if (!p) return;
+            if (tg && tg.sendData) {
+                if (p.is_journal) {
+                    tg.sendData(JSON.stringify({
+                        action: "journal_to_note",
+                        search_query: document.getElementById('query').value.trim(),
+                        status: "pending",
+                        name: p.name,
+                        issn: p.issn,
+                        publisher: p.publisher,
+                        impact_factor: p.impact_factor,
+                        h_index: p.h_index,
+                        apc: p.apc,
+                        review_time: p.review_time,
+                        url: p.url
+                    }));
+                } else {
+                    tg.sendData(JSON.stringify({
+                        action: "doi_to_note",
+                        title: p.title,
+                        authors: p.authors,
+                        year: p.year,
+                        venue: p.venue,
+                        doi: p.doi
+                    }));
+                }
+            } else alert("Abre desde Telegram para guardar.");
+        }
+    </script>
+</body>
+</html>
