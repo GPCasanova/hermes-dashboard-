@@ -134,6 +134,7 @@
         }
 
         function resumir(idx) {
+            alert("DEBUG: Resumir pulsado para paper " + (idx+1));
             if (!tg || !tg.sendData) { alert("Abre desde Telegram"); return; }
             const p = currentPapers[idx];
             if (!p.abstract || p.abstract === "Sin resumen disponible.") { alert("Este paper no tiene abstract."); return; }
@@ -148,6 +149,7 @@
         }
 
         function exportar(tipo) {
+            alert("DEBUG: Botón pulsado. Enviando " + currentPapers.length + " papers");
             if (!currentPapers || currentPapers.length === 0) { alert("Primero haz una búsqueda."); return; }
             if (!tg || !tg.sendData) { alert("Abre desde Telegram"); return; }
             
