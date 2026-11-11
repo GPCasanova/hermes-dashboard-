@@ -149,22 +149,16 @@
         }
 
         function exportar(tipo) {
-            alert("DEBUG: Botón pulsado. Enviando " + currentPapers.length + " papers");
             if (!currentPapers || currentPapers.length === 0) { alert("Primero haz una búsqueda."); return; }
             if (!tg || !tg.sendData) { alert("Abre desde Telegram"); return; }
             
-            // Limitar a 10 papers para no superar el límite de 4096 bytes de Telegram
-            const papersLigeros = currentPapers.slice(0, 10).map(p => ({ 
-                title: p.title ? p.title.substring(0, 100) : "", 
-                authors: p.authors ? p.authors.substring(0, 100) : "", 
-                year: p.year, 
-                venue: p.venue ? p.venue.substring(0, 50) : "", 
-                doi: p.doi 
-            }));
+            // Enviar SOLO los DOIs para no superar el límite de 4096 bytes de Telegram
+            const dois = currentPapers.map(p => p.doi).filter(d => d && d.trim() !== "");
+            if (dois.length === 0) { alert("No hay DOIs en los resultados."); return; }
             
             tg.sendData(JSON.stringify({
                 action: "mendeley_export_" + tipo,
-                papers: papersLigeros
+                dois: dois
             }));
         }
 
