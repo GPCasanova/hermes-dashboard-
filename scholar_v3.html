@@ -241,6 +241,7 @@
                         ${pdfBtn}
                         ${relatedBtn}
                         <button class="btn btn-bibtex" onclick="copiarBibtex(${idx})">📋 BibTeX</button>
+                        <button class="btn" onclick="guardarEnMendeley(${idx})" style="background: #c80022; color: white;">📚 A Mendeley</button>
                         <button class="btn btn-save" onclick="guardarPaper(${idx})">📥 Guardar</button>
                     </div>
                 </div>`;
@@ -320,6 +321,42 @@
             if (tg && tg.sendData) {
                 tg.sendData(JSON.stringify({ action: "scholar_digest", title: p.title, abstract: p.abstract }));
             } else alert("Abre desde Telegram para usar esta función");
+        }
+
+        async function guardarEnMendeley(idx) {
+            const p = currentPapers[idx];
+            if (!p) return;
+            
+            // Feedback visual inmediato
+            const btn = event.target;
+            const originalText = btn.innerText;
+            btn.innerText = "⏳...";
+            btn.disabled = true;
+
+            try {
+                const r = await fetch("https://mendeley-proxy.geisercasanova.workers.dev/?action=add", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        title: p.title,
+                        doi: p.doi
+                    })
+                });
+                
+                if (r.ok) {
+                    btn.innerText = "✅ En Mendeley";
+                    btn.style.background = "#10b981";
+                } else {
+                    const err = await r.json();
+                    alert("Error: " + (err.error || "No se pudo guardar"));
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                alert("Error de red: " + e.message);
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
         }
 
         function guardarPaper(idx) {
