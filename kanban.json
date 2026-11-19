@@ -1,7 +1,17 @@
 {
   "_boards": [
-    "default"
+    "default",
+    "cambio-categoria",
+    "publicaciones",
+    "tesis-doctoral"
   ],
-  "_projects": [],
-  "default": []
+  "_projects": [
+    "cambio-de-categoria-a-auxiliar",
+    "publicaci-n-cient-fica",
+    "doctorado"
+  ],
+  "default": [],
+  "cambio-categoria": [],
+  "publicaciones": [],
+  "tesis-doctoral": []
 }
