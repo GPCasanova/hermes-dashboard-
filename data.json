@@ -1,8 +1,8 @@
 {
-  "timestamp": 1795189805,
-  "ram": {"free": 574, "total": 3652},
-  "vpn": {"ip": "0.0.0.0", "country": "?"},
-  "gateway": {"pid": "16297", "uptime": "03:05:03"},
+  "timestamp": 1795190107,
+  "ram": {"free": 681, "total": 3652},
+  "vpn": {"ip": "143.244.137.184", "country": "IN"},
+  "gateway": {"pid": "16297", "uptime": "03:10:05"},
   "crons": {"active": 16},
   "inbox": {"count": 1},
   "gbrain": {"last_sync": 1795145557}
