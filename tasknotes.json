@@ -490,6 +490,19 @@
     "path": "TaskNotes/Tasks/Ir_a_la_universidad.md"
   },
   {
+    "title": "Terminar web de Cardiologia en opencode",
+    "status": "open",
+    "priority": "normal",
+    "due": "None",
+    "area": "004 RECURSOS/Medicina/",
+    "tags": [
+      "task"
+    ],
+    "is_project": false,
+    "has_subtasks": false,
+    "path": "TaskNotes/Tasks/Terminar web de Cardiologia en opencode.md"
+  },
+  {
     "title": "Probar la skill crear-nota",
     "status": "done",
     "priority": "normal",
