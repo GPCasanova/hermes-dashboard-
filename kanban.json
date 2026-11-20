@@ -10,7 +10,19 @@
     "publicaci-n-cient-fica",
     "doctorado"
   ],
-  "default": [],
+  "default": [
+    {
+      "id": "t_b8965790",
+      "status": "ready",
+      "assignee": "unassigned",
+      "title": "Terminar web de Cardiologia en opencode",
+      "priority": 0,
+      "created_at": 1795145828,
+      "started_at": null,
+      "completed_at": null,
+      "due_date": null
+    }
+  ],
   "cambio-categoria": [
     {
       "id": "t_21b74dbc",
