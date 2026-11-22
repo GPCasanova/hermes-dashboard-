@@ -5,11 +5,7 @@
     "publicaciones",
     "tesis-doctoral"
   ],
-  "_projects": [
-    "cambio-de-categoria-a-auxiliar",
-    "publicaci-n-cient-fica",
-    "doctorado"
-  ],
+  "_projects": [],
   "default": [
     {
       "id": "t_b8965790",
