@@ -1,17 +1,17 @@
 {
-  "timestamp": 1795475105,
-  "ram": {"free": 498, "total": 3652},
-  "vpn": {"ip": "152.207.75.0", "country": "
+  "timestamp": 1795475405,
+  "ram": {"free": 402, "total": 3652},
+  "vpn": {"ip": "152.206.27.0", "country": "
 <html><head>
 <meta http-equiv="content-type" content="text/html;charset=utf-8">
 <title>403 Forbidden</title>
 </head>
 <body text=#000000 bgcolor=#ffffff>
 <h1>Error: Forbidden</h1>
-<h2>Your client does not have permission to get URL <code>/152.207.75.0/country</code> from this server.</h2>
+<h2>Your client does not have permission to get URL <code>/152.206.27.0/country</code> from this server.</h2>
 <h2></h2>
 </body></html>"},
-  "gateway": {"pid": "14743", "uptime": "24:51"},
+  "gateway": {"pid": "14743", "uptime": "29:51"},
   "crons": {"active": 16},
   "inbox": {"count": 2},
   "gbrain": {"last_sync": 1795426515}
