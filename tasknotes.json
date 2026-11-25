@@ -395,19 +395,6 @@
     "path": "TaskNotes/Tasks/Revisar bibliografias de sepis.md"
   },
   {
-    "title": "Confeccionar infografia",
-    "status": "open",
-    "priority": "normal",
-    "due": "2026-10-16",
-    "area": "None",
-    "tags": [
-      "task"
-    ],
-    "is_project": false,
-    "has_subtasks": true,
-    "path": "TaskNotes/Tasks/Confeccionar infografia.md"
-  },
-  {
     "title": "Restructurar conferencias de Cardiologia",
     "status": "in-progress",
     "priority": "medium",
@@ -434,6 +421,19 @@
     "is_project": false,
     "has_subtasks": false,
     "path": "TaskNotes/Tasks/Ver video nuevo de youtube.md"
+  },
+  {
+    "title": "Confeccionar infografia",
+    "status": "open",
+    "priority": "normal",
+    "due": "2026-11-25",
+    "area": "None",
+    "tags": [
+      "task"
+    ],
+    "is_project": false,
+    "has_subtasks": true,
+    "path": "TaskNotes/Tasks/Confeccionar infografia.md"
   },
   {
     "title": "Crear fondo de inversión de 100mil CUP",
