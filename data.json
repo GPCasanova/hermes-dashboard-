@@ -1,6 +1,6 @@
 {
-  "timestamp": 1795725905,
-  "ram": {"free": 440, "total": 3652},
+  "timestamp": 1795726805,
+  "ram": {"free": 578, "total": 3652},
   "vpn": {"ip": "152.206.211.118", "country": "
 <html><head>
 <meta http-equiv="content-type" content="text/html;charset=utf-8">
@@ -11,7 +11,7 @@
 <h2>Your client does not have permission to get URL <code>/152.206.211.118/country</code> from this server.</h2>
 <h2></h2>
 </body></html>"},
-  "gateway": {"pid": "22146", "uptime": "01:34:50"},
+  "gateway": {"pid": "1848", "uptime": "02:46"},
   "crons": {"active": 16},
   "inbox": {"count": 2},
   "gbrain": {"last_sync": 1795636280}
